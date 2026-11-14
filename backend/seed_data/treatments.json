@@ -1,0 +1,137 @@
+[
+  {
+    "disease_name": "Tomato Early Blight",
+    "fertilizer_recommendation": "Avoid excess nitrogen; apply balanced NPK and compost to improve plant vigor.",
+    "pesticide_recommendation": "Spray Mancozeb 75 WP @ 2.5g/L or Chlorothalonil 75 WP @ 2g/L water.",
+    "organic_option": "Foliar spray of Trichoderma harzianum @ 5g/L or 1% Bordeaux mixture.",
+    "dosage": "2.5 grams per liter of water",
+    "application_method": "Thorough foliar spray at the first sign of lower leaf spotting",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Tomato Yellow Leaf Curl Virus",
+    "fertilizer_recommendation": "Apply micronutrient mixtures with zinc and boron to mitigate viral stress.",
+    "pesticide_recommendation": "Control whitefly vector with Imidacloprid 17.8 SL @ 0.3ml/L or Thiamethoxam 25 WG @ 0.3g/L.",
+    "organic_option": "Install yellow sticky traps (15 traps/acre); spray 5% Neem Seed Kernel Extract (NSKE).",
+    "dosage": "0.3 ml per liter of water",
+    "application_method": "Early morning foliar spray targeting leaf undersides where whiteflies shelter",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Tomato Bacterial Wilt",
+    "fertilizer_recommendation": "Apply bleaching powder @ 10-15 kg/ha before planting; maintain neutral soil pH.",
+    "pesticide_recommendation": "Soil drenching with Streptocycline (200 ppm) + Copper Oxychloride @ 2.5g/L.",
+    "organic_option": "Soil application of Pseudomonas fluorescens @ 2.5 kg/ha enriched in farmyard manure.",
+    "dosage": "1g Streptocycline + 25g Copper Oxychloride in 10 liters of water",
+    "application_method": "Root zone drenching around affected and surrounding plants",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Potato Late Blight",
+    "fertilizer_recommendation": "Balanced potash application (120 kg/ha K2O) to increase tuber and foliage resistance.",
+    "pesticide_recommendation": "Spray Metalaxyl 8% + Mancozeb 64% WP (Ridomil) @ 2.5g/L or Cymoxanil + Mancozeb @ 2g/L.",
+    "organic_option": "Prophylactic spray of copper hydroxide @ 2g/L or Bacillus subtilis bio-fungicide.",
+    "dosage": "2.5 grams per liter of water",
+    "application_method": "Uniform canopy spray covering both upper and lower leaf surfaces",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Potato Early Blight",
+    "fertilizer_recommendation": "Maintain adequate nitrogen and potassium; avoid water deficit stress.",
+    "pesticide_recommendation": "Spray Chlorothalonil 75 WP @ 2g/L or Propiconazole 25 EC @ 1ml/L.",
+    "organic_option": "Spray Neem oil (1500 ppm) @ 5ml/L or fermented butter milk (Chhachh) spray.",
+    "dosage": "2 grams per liter of water",
+    "application_method": "Foliar application repeated after 10-12 days if disease persists",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Rice Blast",
+    "fertilizer_recommendation": "Avoid split doses of high nitrogen; top-dress silicon and potassium fertilizers.",
+    "pesticide_recommendation": "Foliar spray with Tricyclazole 75 WP @ 0.6g/L or Isoprothiolane 40 EC @ 1.5ml/L.",
+    "organic_option": "Seed treatment with Pseudomonas fluorescens @ 10g/kg seed; foliar spray @ 2.5g/L.",
+    "dosage": "0.6 grams per liter of water",
+    "application_method": "Spray at tillering and boot leaf emergence stages",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Bacterial Leaf Blight",
+    "fertilizer_recommendation": "Drain standing water immediately; withhold top-dressing of nitrogen.",
+    "pesticide_recommendation": "Spray Copper Hydroxide 77 WP @ 2g/L mixed with Streptocycline @ 0.1g/L.",
+    "organic_option": "Foliar spray of fresh cow dung slurry supernatant (20%) or bioagent P. fluorescens.",
+    "dosage": "2g Copper Hydroxide + 0.1g Streptocycline per liter of water",
+    "application_method": "Fine mist spray across affected field strips",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Wheat Rust",
+    "fertilizer_recommendation": "Avoid excessive urea in late stages; supplement with micronutrient zinc.",
+    "pesticide_recommendation": "Foliar spray with Propiconazole 25 EC (Tilt) @ 1ml/L or Tebuconazole 25.9 EC @ 1ml/L.",
+    "organic_option": "Sow certified rust-resistant varieties; spray Trichoderma viride @ 5g/L.",
+    "dosage": "1 ml per liter of water",
+    "application_method": "Immediate whole-field spray as soon as yellow pustules appear",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Powdery Mildew",
+    "fertilizer_recommendation": "Optimize plant spacing; avoid dense sowing that traps moisture.",
+    "pesticide_recommendation": "Dust Wettable Sulfur 80 WP @ 3g/L or Triadimefon 25 WP @ 1g/L.",
+    "organic_option": "Spray 0.5% baking soda (sodium bicarbonate) solution or diluted milk (1:9).",
+    "dosage": "3 grams per liter of water",
+    "application_method": "Foliar spray during early morning before intense sunlight",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Northern Corn Leaf Blight",
+    "fertilizer_recommendation": "Maintain balanced N-P-K nutrition; incorporate crop residue after harvest.",
+    "pesticide_recommendation": "Spray Azoxystrobin 18.2% + Difenoconazole 11.4% SC @ 1ml/L or Mancozeb 75 WP @ 2.5g/L.",
+    "organic_option": "Crop rotation with legumes; foliar application of biofungicide Trichoderma.",
+    "dosage": "1 ml per liter of water",
+    "application_method": "Foliar spray at whorl stage and pre-tasseling stage",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Cotton Leaf Curl Virus",
+    "fertilizer_recommendation": "Supply potassium nitrate (KNO3) 2% foliar spray to boost boll retention.",
+    "pesticide_recommendation": "Control vector Bemisia tabaci using Diafenthiuron 50 WP @ 1.2g/L or Pyriproxyfen 10 EC @ 2ml/L.",
+    "organic_option": "Install yellow sticky traps; foliar spray of Castor oil emulsion or 5% neem extract.",
+    "dosage": "1.2 grams per liter of water",
+    "application_method": "Spray directed at canopy underside where whiteflies congregate",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Red Rot",
+    "fertilizer_recommendation": "Apply bio-fertilizer Azotobacter and enrich soil with organic matter.",
+    "pesticide_recommendation": "Sett treatment with Carbendazim 50 WP @ 1g/L for 30 minutes before planting.",
+    "organic_option": "Hot water treatment of setts at 52°C for 30 minutes; rogue out infected stools.",
+    "dosage": "1 gram per liter of water for cane sett soaking",
+    "application_method": "Pre-planting dip treatment of sugarcane seed setts",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Soybean Rust",
+    "fertilizer_recommendation": "Balanced basal fertilizer application; avoid delayed planting.",
+    "pesticide_recommendation": "Spray Hexaconazole 5 EC @ 1ml/L or Azoxystrobin 23 SC @ 1ml/L.",
+    "organic_option": "Foliar application of Pseudomonas fluorescens @ 5g/L.",
+    "dosage": "1 ml per liter of water",
+    "application_method": "Spray at flowering and pod filling stages upon initial detection",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Onion Downy Mildew",
+    "fertilizer_recommendation": "Avoid overhead sprinkler irrigation; ensure good row-to-row ventilation.",
+    "pesticide_recommendation": "Spray Metalaxyl + Mancozeb 72 WP @ 2.5g/L with a wetting sticker agent.",
+    "organic_option": "Spray Copper Oxychloride @ 3g/L or Garlic-chili extract.",
+    "dosage": "2.5 grams per liter of water + 0.5ml sticker agent",
+    "application_method": "Foliar spray with sticker agent because onion leaves have waxy cuticles",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  },
+  {
+    "disease_name": "Chili Anthracnose",
+    "fertilizer_recommendation": "Apply potassium and calcium to thicken fruit cell walls and improve resistance.",
+    "pesticide_recommendation": "Spray Azoxystrobin 23 SC @ 1ml/L or Difenoconazole 25 EC @ 0.5ml/L.",
+    "organic_option": "Seed treatment with Trichoderma viride @ 10g/kg; rogue diseased fruits.",
+    "dosage": "1 ml per liter of water",
+    "application_method": "Foliar spray during fruit setting and ripening stages",
+    "safety_note": "Follow the product label and confirm the dose with your local agriculture officer or Krishi Vigyan Kendra before spraying."
+  }
+]

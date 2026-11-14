@@ -1,0 +1,9 @@
+{
+  "extraPaths": [
+    "backend",
+    "backend/app",
+    "backend/.venv/lib/python3.14/site-packages",
+    "/Users/harshvardhanmishra/Desktop/Krishi Drishti/backend/.venv/lib/python3.14/site-packages"
+  ],
+  "pythonVersion": "3.11"
+}

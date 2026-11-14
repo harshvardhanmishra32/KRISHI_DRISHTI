@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Tomato",
+    "scientific_name": "Solanum lycopersicum",
+    "category": "vegetable",
+    "season": "rabi",
+    "ideal_soil_type": "Well-drained sandy loam",
+    "water_requirement_mm": 500.0,
+    "ideal_ph_min": 6.0,
+    "ideal_ph_max": 7.0,
+    "typical_npk": "120:60:60"
+  },
+  {
+    "name": "Potato",
+    "scientific_name": "Solanum tuberosum",
+    "category": "tuber",
+    "season": "rabi",
+    "ideal_soil_type": "Sandy loam rich in organic matter",
+    "water_requirement_mm": 550.0,
+    "ideal_ph_min": 5.2,
+    "ideal_ph_max": 6.4,
+    "typical_npk": "150:100:120"
+  },
+  {
+    "name": "Rice",
+    "scientific_name": "Oryza sativa",
+    "category": "cereal",
+    "season": "kharif",
+    "ideal_soil_type": "Clay or clay loam",
+    "water_requirement_mm": 1200.0,
+    "ideal_ph_min": 5.5,
+    "ideal_ph_max": 7.5,
+    "typical_npk": "100:50:50"
+  },
+  {
+    "name": "Wheat",
+    "scientific_name": "Triticum aestivum",
+    "category": "cereal",
+    "season": "rabi",
+    "ideal_soil_type": "Loam to clay loam",
+    "water_requirement_mm": 450.0,
+    "ideal_ph_min": 6.0,
+    "ideal_ph_max": 7.5,
+    "typical_npk": "120:60:40"
+  },
+  {
+    "name": "Maize",
+    "scientific_name": "Zea mays",
+    "category": "cereal",
+    "season": "kharif",
+    "ideal_soil_type": "Deep, well-drained fertile loam",
+    "water_requirement_mm": 600.0,
+    "ideal_ph_min": 5.8,
+    "ideal_ph_max": 7.2,
+    "typical_npk": "120:60:40"
+  },
+  {
+    "name": "Cotton",
+    "scientific_name": "Gossypium hirsutum",
+    "category": "fiber",
+    "season": "kharif",
+    "ideal_soil_type": "Deep black clayey (Regur) soil",
+    "water_requirement_mm": 700.0,
+    "ideal_ph_min": 6.0,
+    "ideal_ph_max": 8.0,
+    "typical_npk": "100:50:50"
+  },
+  {
+    "name": "Sugarcane",
+    "scientific_name": "Saccharum officinarum",
+    "category": "cash_crop",
+    "season": "annual",
+    "ideal_soil_type": "Deep rich loamy soil",
+    "water_requirement_mm": 1800.0,
+    "ideal_ph_min": 6.5,
+    "ideal_ph_max": 7.5,
+    "typical_npk": "250:115:115"
+  },
+  {
+    "name": "Soybean",
+    "scientific_name": "Glycine max",
+    "category": "pulse/oilseed",
+    "season": "kharif",
+    "ideal_soil_type": "Well-drained fertile loamy soil",
+    "water_requirement_mm": 550.0,
+    "ideal_ph_min": 6.0,
+    "ideal_ph_max": 7.0,
+    "typical_npk": "30:60:40"
+  },
+  {
+    "name": "Onion",
+    "scientific_name": "Allium cepa",
+    "category": "vegetable",
+    "season": "rabi",
+    "ideal_soil_type": "Friable sandy loam",
+    "water_requirement_mm": 400.0,
+    "ideal_ph_min": 6.0,
+    "ideal_ph_max": 7.0,
+    "typical_npk": "100:50:50"
+  },
+  {
+    "name": "Chili",
+    "scientific_name": "Capsicum annuum",
+    "category": "spice/vegetable",
+    "season": "kharif",
+    "ideal_soil_type": "Well-drained black loam",
+    "water_requirement_mm": 600.0,
+    "ideal_ph_min": 6.0,
+    "ideal_ph_max": 6.8,
+    "typical_npk": "120:60:60"
+  }
+]

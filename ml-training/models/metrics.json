@@ -1,0 +1,346 @@
+{
+  "model_file": "ml-training/models/best.keras",
+  "test_samples": 3045,
+  "test_accuracy": 0.9326765188834154,
+  "macro_f1": 0.9159632472219669,
+  "classification_report": {
+    "potato_early_blight": {
+      "precision": 0.9865771812080537,
+      "recall": 0.98,
+      "f1-score": 0.9832775919732442,
+      "support": 150.0
+    },
+    "potato_healthy": {
+      "precision": 0.8461538461538461,
+      "recall": 0.9565217391304348,
+      "f1-score": 0.8979591836734694,
+      "support": 23.0
+    },
+    "potato_late_blight": {
+      "precision": 0.952054794520548,
+      "recall": 0.9266666666666666,
+      "f1-score": 0.9391891891891891,
+      "support": 150.0
+    },
+    "tomato_bacterial_spot": {
+      "precision": 0.9451612903225807,
+      "recall": 0.9184952978056427,
+      "f1-score": 0.931637519872814,
+      "support": 319.0
+    },
+    "tomato_early_blight": {
+      "precision": 0.7784431137724551,
+      "recall": 0.8666666666666667,
+      "f1-score": 0.8201892744479495,
+      "support": 150.0
+    },
+    "tomato_healthy": {
+      "precision": 0.9915254237288136,
+      "recall": 0.9831932773109243,
+      "f1-score": 0.9873417721518988,
+      "support": 238.0
+    },
+    "tomato_late_blight": {
+      "precision": 0.9183673469387755,
+      "recall": 0.9473684210526315,
+      "f1-score": 0.9326424870466321,
+      "support": 285.0
+    },
+    "tomato_leaf_mold": {
+      "precision": 0.9407407407407408,
+      "recall": 0.8881118881118881,
+      "f1-score": 0.9136690647482014,
+      "support": 143.0
+    },
+    "tomato_mosaic_virus": {
+      "precision": 0.7971014492753623,
+      "recall": 0.9821428571428571,
+      "f1-score": 0.88,
+      "support": 56.0
+    },
+    "tomato_septoria_leaf_spot": {
+      "precision": 0.960352422907489,
+      "recall": 0.8226415094339623,
+      "f1-score": 0.8861788617886179,
+      "support": 265.0
+    },
+    "tomato_spider_mites": {
+      "precision": 0.8702290076335878,
+      "recall": 0.9083665338645418,
+      "f1-score": 0.8888888888888888,
+      "support": 251.0
+    },
+    "tomato_target_spot": {
+      "precision": 0.8170212765957446,
+      "recall": 0.909952606635071,
+      "f1-score": 0.8609865470852018,
+      "support": 211.0
+    },
+    "tomato_yellow_leaf_curl_virus": {
+      "precision": 0.9949302915082383,
+      "recall": 0.9763681592039801,
+      "f1-score": 0.9855618330194601,
+      "support": 804.0
+    },
+    "accuracy": 0.9326765188834154,
+    "macro avg": {
+      "precision": 0.9075890911774026,
+      "recall": 0.9281919710019437,
+      "f1-score": 0.9159632472219669,
+      "support": 3045.0
+    },
+    "weighted avg": {
+      "precision": 0.9361730450019033,
+      "recall": 0.9326765188834154,
+      "f1-score": 0.9333258948809945,
+      "support": 3045.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      147,
+      1,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      22,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      3,
+      139,
+      0,
+      0,
+      0,
+      6,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1,
+      293,
+      12,
+      0,
+      5,
+      0,
+      0,
+      1,
+      1,
+      4,
+      2
+    ],
+    [
+      0,
+      0,
+      1,
+      2,
+      130,
+      1,
+      7,
+      1,
+      1,
+      4,
+      1,
+      2,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      234,
+      0,
+      0,
+      0,
+      0,
+      1,
+      3,
+      0
+    ],
+    [
+      0,
+      0,
+      2,
+      0,
+      9,
+      0,
+      270,
+      0,
+      0,
+      1,
+      0,
+      2,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      1,
+      2,
+      0,
+      2,
+      127,
+      3,
+      0,
+      5,
+      3,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      55,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      1,
+      0,
+      0,
+      11,
+      6,
+      0,
+      3,
+      6,
+      3,
+      218,
+      3,
+      14,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      5,
+      0,
+      228,
+      14,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      4,
+      0,
+      0,
+      0,
+      0,
+      1,
+      14,
+      192,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      3,
+      3,
+      0,
+      0,
+      0,
+      2,
+      1,
+      9,
+      1,
+      785
+    ]
+  ],
+  "top_confused_pairs": [
+    {
+      "true_class": "tomato_septoria_leaf_spot",
+      "predicted_class": "tomato_target_spot",
+      "count": 14
+    },
+    {
+      "true_class": "tomato_spider_mites",
+      "predicted_class": "tomato_target_spot",
+      "count": 14
+    },
+    {
+      "true_class": "tomato_target_spot",
+      "predicted_class": "tomato_spider_mites",
+      "count": 14
+    },
+    {
+      "true_class": "tomato_bacterial_spot",
+      "predicted_class": "tomato_early_blight",
+      "count": 12
+    },
+    {
+      "true_class": "tomato_septoria_leaf_spot",
+      "predicted_class": "tomato_bacterial_spot",
+      "count": 11
+    }
+  ],
+  "confidence_calibration": {
+    "<0.50": {
+      "total": 65,
+      "correct": 25,
+      "accuracy": 0.3846
+    },
+    "0.50-0.70": {
+      "total": 197,
+      "correct": 125,
+      "accuracy": 0.6345
+    },
+    "0.70-0.90": {
+      "total": 345,
+      "correct": 288,
+      "accuracy": 0.8348
+    },
+    ">0.90": {
+      "total": 2438,
+      "correct": 2402,
+      "accuracy": 0.9852
+    }
+  },
+  "recommended_low_confidence_threshold": 0.7
+}

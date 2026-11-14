@@ -1,0 +1,202 @@
+[
+  {
+    "crop_name": "Tomato",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Vibrant green leaves, robust stems, no lesions or abnormal discoloration.",
+    "severity_level": "none",
+    "model_class_name": "tomato_healthy"
+  },
+  {
+    "crop_name": "Tomato",
+    "name": "Tomato Early Blight",
+    "causal_organism": "Alternaria solani",
+    "symptoms": "Target-like brown concentric rings on lower leaves; yellowing foliage.",
+    "severity_level": "medium",
+    "model_class_name": "tomato_early_blight"
+  },
+  {
+    "crop_name": "Tomato",
+    "name": "Tomato Yellow Leaf Curl Virus",
+    "causal_organism": "Tomato yellow leaf curl virus (TYLCV)",
+    "symptoms": "Yellow curled leaves, severe plant stunting, flower drop.",
+    "severity_level": "high",
+    "model_class_name": "tomato_yellow_leaf_curl_virus"
+  },
+  {
+    "crop_name": "Tomato",
+    "name": "Tomato Bacterial Wilt",
+    "causal_organism": "Ralstonia solanacearum",
+    "symptoms": "Rapid daytime wilting without yellowing; vascular browning in lower stem.",
+    "severity_level": "high",
+    "model_class_name": "tomato_bacterial_wilt"
+  },
+  {
+    "crop_name": "Potato",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Lush green foliage, normal upright growth, clean leaves without blotches.",
+    "severity_level": "none",
+    "model_class_name": "potato_healthy"
+  },
+  {
+    "crop_name": "Potato",
+    "name": "Potato Late Blight",
+    "causal_organism": "Phytophthora infestans",
+    "symptoms": "Dark water-soaked leaf spots, white mildew on leaf undersides, tuber decay.",
+    "severity_level": "high",
+    "model_class_name": "potato_late_blight"
+  },
+  {
+    "crop_name": "Potato",
+    "name": "Potato Early Blight",
+    "causal_organism": "Alternaria solani",
+    "symptoms": "Small brown concentric ring spots expanding across leaves; drying foliage.",
+    "severity_level": "medium",
+    "model_class_name": "potato_early_blight"
+  },
+  {
+    "crop_name": "Rice",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Uniform green tillers, healthy erect flag leaves, no neck rot.",
+    "severity_level": "none",
+    "model_class_name": "rice_healthy"
+  },
+  {
+    "crop_name": "Rice",
+    "name": "Rice Blast",
+    "causal_organism": "Magnaporthe oryzae",
+    "symptoms": "Diamond or spindle-shaped lesions with gray centers; neck rot causing blank grains.",
+    "severity_level": "high",
+    "model_class_name": "rice_blast"
+  },
+  {
+    "crop_name": "Rice",
+    "name": "Bacterial Leaf Blight",
+    "causal_organism": "Xanthomonas oryzae",
+    "symptoms": "Water-soaked stripes starting from leaf tips, wavy margin yellowing, wilting.",
+    "severity_level": "high",
+    "model_class_name": "rice_bacterial_leaf_blight"
+  },
+  {
+    "crop_name": "Wheat",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Vigorous tillers, clean upright green leaf blades, uniform earhead emergence.",
+    "severity_level": "none",
+    "model_class_name": "wheat_healthy"
+  },
+  {
+    "crop_name": "Wheat",
+    "name": "Wheat Rust",
+    "causal_organism": "Puccinia spp.",
+    "symptoms": "Orange and yellow linear pustules on leaf blades and sheaths; premature lodging.",
+    "severity_level": "high",
+    "model_class_name": "wheat_rust"
+  },
+  {
+    "crop_name": "Wheat",
+    "name": "Powdery Mildew",
+    "causal_organism": "Blumeria graminis",
+    "symptoms": "White cottony/powdery patches across upper leaf surfaces turning grayish.",
+    "severity_level": "medium",
+    "model_class_name": "wheat_powdery_mildew"
+  },
+  {
+    "crop_name": "Maize",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Robust deep green broad leaves, vigorous stalk, clean ear silks.",
+    "severity_level": "none",
+    "model_class_name": "maize_healthy"
+  },
+  {
+    "crop_name": "Maize",
+    "name": "Northern Corn Leaf Blight",
+    "causal_organism": "Exserohilum turcicum",
+    "symptoms": "Long, grayish-green cigar-shaped lesions on lower leaves progressing upwards.",
+    "severity_level": "medium",
+    "model_class_name": "maize_northern_leaf_blight"
+  },
+  {
+    "crop_name": "Cotton",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Uniform leaf branching, healthy squares and bolls, no vein thickening.",
+    "severity_level": "none",
+    "model_class_name": "cotton_healthy"
+  },
+  {
+    "crop_name": "Cotton",
+    "name": "Cotton Leaf Curl Virus",
+    "causal_organism": "Cotton leaf curl virus (CLCuV)",
+    "symptoms": "Upward or downward leaf curling, swollen enations on leaf veins, stunting.",
+    "severity_level": "high",
+    "model_class_name": "cotton_leaf_curl_virus"
+  },
+  {
+    "crop_name": "Sugarcane",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Tall sturdy canes, lush dark green foliage, no stalk discoloration.",
+    "severity_level": "none",
+    "model_class_name": "sugarcane_healthy"
+  },
+  {
+    "crop_name": "Sugarcane",
+    "name": "Red Rot",
+    "causal_organism": "Colletotrichum falcatum",
+    "symptoms": "Reddening of internal stalk tissues with white transverse patches, alcoholic odor.",
+    "severity_level": "high",
+    "model_class_name": "sugarcane_red_rot"
+  },
+  {
+    "crop_name": "Soybean",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Clean trifoliate leaves, uniform canopy development, no early leaf drop.",
+    "severity_level": "none",
+    "model_class_name": "soybean_healthy"
+  },
+  {
+    "crop_name": "Soybean",
+    "name": "Soybean Rust",
+    "causal_organism": "Phakopsora pachyrhizi",
+    "symptoms": "Small brown/tan lesions with volcanic pustules on undersides; rapid defoliation.",
+    "severity_level": "high",
+    "model_class_name": "soybean_rust"
+  },
+  {
+    "crop_name": "Onion",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Firm tubular green leaves, clean white or purple bulb scales.",
+    "severity_level": "none",
+    "model_class_name": "onion_healthy"
+  },
+  {
+    "crop_name": "Onion",
+    "name": "Onion Downy Mildew",
+    "causal_organism": "Peronospora destructor",
+    "symptoms": "Pale yellowish oval patches with violet-gray velvety fungal growth; leaf collapse.",
+    "severity_level": "medium",
+    "model_class_name": "onion_downy_mildew"
+  },
+  {
+    "crop_name": "Chili",
+    "name": "Healthy",
+    "causal_organism": "None",
+    "symptoms": "Glossy green leaves, strong flowering, undamaged firm chili pods.",
+    "severity_level": "none",
+    "model_class_name": "chili_healthy"
+  },
+  {
+    "crop_name": "Chili",
+    "name": "Chili Anthracnose",
+    "causal_organism": "Colletotrichum capsici",
+    "symptoms": "Circular sunken dark spots on mature fruits with concentric black rings of acervuli.",
+    "severity_level": "high",
+    "model_class_name": "chili_anthracnose"
+  }
+]

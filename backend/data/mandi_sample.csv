@@ -1,0 +1,21 @@
+state,district,market,commodity,variety,arrival_date,min_price,max_price,modal_price
+Uttar Pradesh,Lucknow,Lucknow,Tomato,Deshi,2026-11-12,1800,2400,2100
+Uttar Pradesh,Lucknow,Lucknow,Potato,Deshi,2026-11-12,1200,1600,1450
+Uttar Pradesh,Lucknow,Lucknow,Wheat,Dara,2026-11-12,2250,2400,2325
+Uttar Pradesh,Varanasi,Varanasi,Tomato,Hybrid,2026-11-12,1900,2500,2200
+Uttar Pradesh,Varanasi,Varanasi,Paddy,Common,2026-11-12,2050,2250,2183
+Maharashtra,Nashik,Lasalgaon,Onion,Red,2026-11-12,1500,2800,2200
+Maharashtra,Pune,Pune,Tomato,Local,2026-11-12,1750,2300,2050
+Maharashtra,Nagpur,Nagpur,Cotton,Medium Staple,2026-11-12,6800,7500,7100
+Madhya Pradesh,Indore,Indore,Wheat,Lokwan,2026-11-12,2400,2700,2550
+Madhya Pradesh,Indore,Indore,Bengal Gram(Gram)(Whole),Desi,2026-11-12,5400,6100,5800
+Punjab,Ludhiana,Ludhiana,Wheat,PBW,2026-11-12,2275,2350,2300
+Punjab,Ludhiana,Ludhiana,Paddy(Dhan)(Common),PR-126,2026-11-12,2183,2300,2220
+Haryana,Karnal,Karnal,Paddy(Dhan)(Common),Basmati,2026-11-12,3200,3800,3500
+Gujarat,Rajkot,Rajkot,Cotton,Shankar-6,2026-11-12,7000,7600,7350
+Karnataka,Kolar,Kolar,Tomato,Hybrid,2026-11-12,1600,2200,1950
+West Bengal,Hooghly,Sheoraphuli,Potato,Jyoti,2026-11-12,1150,1450,1320
+Bihar,Patna,Patna,Brinjal,Round,2026-11-12,1400,1900,1650
+Bihar,Patna,Patna,Cabbage,Local,2026-11-12,1200,1700,1450
+Uttar Pradesh,Meerut,Meerut,Sugarcane,Co-0238,2026-11-12,350,380,365
+Maharashtra,Kolhapur,Kolhapur,Sugarcane,General,2026-11-12,340,375,360

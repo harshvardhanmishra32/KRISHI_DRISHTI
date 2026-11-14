@@ -1,0 +1,93 @@
+[
+  {
+    "class_name": "potato_early_blight",
+    "train": 700,
+    "val": 150,
+    "test": 150,
+    "total": 1000
+  },
+  {
+    "class_name": "potato_healthy",
+    "train": 106,
+    "val": 23,
+    "test": 23,
+    "total": 152
+  },
+  {
+    "class_name": "potato_late_blight",
+    "train": 700,
+    "val": 150,
+    "test": 150,
+    "total": 1000
+  },
+  {
+    "class_name": "tomato_bacterial_spot",
+    "train": 1489,
+    "val": 319,
+    "test": 319,
+    "total": 2127
+  },
+  {
+    "class_name": "tomato_early_blight",
+    "train": 700,
+    "val": 150,
+    "test": 150,
+    "total": 1000
+  },
+  {
+    "class_name": "tomato_healthy",
+    "train": 1109,
+    "val": 238,
+    "test": 238,
+    "total": 1585
+  },
+  {
+    "class_name": "tomato_late_blight",
+    "train": 1331,
+    "val": 285,
+    "test": 285,
+    "total": 1901
+  },
+  {
+    "class_name": "tomato_leaf_mold",
+    "train": 666,
+    "val": 143,
+    "test": 143,
+    "total": 952
+  },
+  {
+    "class_name": "tomato_mosaic_virus",
+    "train": 261,
+    "val": 56,
+    "test": 56,
+    "total": 373
+  },
+  {
+    "class_name": "tomato_septoria_leaf_spot",
+    "train": 1240,
+    "val": 266,
+    "test": 265,
+    "total": 1771
+  },
+  {
+    "class_name": "tomato_spider_mites",
+    "train": 1173,
+    "val": 252,
+    "test": 251,
+    "total": 1676
+  },
+  {
+    "class_name": "tomato_target_spot",
+    "train": 983,
+    "val": 210,
+    "test": 211,
+    "total": 1404
+  },
+  {
+    "class_name": "tomato_yellow_leaf_curl_virus",
+    "train": 3750,
+    "val": 803,
+    "test": 804,
+    "total": 5357
+  }
+]
