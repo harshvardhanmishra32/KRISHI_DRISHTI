@@ -137,6 +137,8 @@ In `disease_reports`, `farm_id` is defined with `ondelete="SET NULL"` and `nulla
 Make sure Docker Desktop is running, then in your terminal:
 ```bash
 cd "/Users/harshvardhanmishra/Desktop/Krishi Drishti"
+cp .env.example .env
+# Set SECRET_KEY to a private value before starting the services.
 docker compose up -d
 docker compose ps
 ```
@@ -144,6 +146,7 @@ docker compose ps
 ### Step 2: Activate Virtual Environment & Install Dependencies
 ```bash
 cd backend
+python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -176,13 +179,22 @@ python scripts/create_officer.py --name "Dr. Sharma" --phone 9876543210 --passwo
 
 ### Step 7: Run the FastAPI Server
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 Open your browser at:
-- **Interactive Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+- **Interactive Swagger UI**: [http://localhost:8001/docs](http://localhost:8001/docs)
+- **Health Check**: [http://localhost:8001/health](http://localhost:8001/health)
 
-### Step 8: Run Automated Pytest Suite
+### Step 8: Run the Frontend
+In a second terminal:
+```bash
+cd "/Users/harshvardhanmishra/Desktop/Krishi Drishti/frontend"
+npm ci
+npm run dev
+```
+Open [http://localhost:3001](http://localhost:3001). The frontend calls the backend on port `8001` by default.
+
+### Step 9: Run Automated Pytest Suite
 ```bash
 pytest -v
 ```

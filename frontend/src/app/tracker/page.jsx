@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   IndianRupee,
   Plus,
@@ -86,7 +86,7 @@ export default function TrackerPage() {
   }, []);
 
   // 2. Fetch Expenses & Profit Summary
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     if (!selectedFarmId) {
       setLoading(false);
       return;
@@ -122,13 +122,13 @@ export default function TrackerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedFarmId, selectedCropId]);
 
   useEffect(() => {
     if (selectedFarmId) {
       refreshData();
     }
-  }, [selectedFarmId, selectedCropId]);
+  }, [refreshData, selectedFarmId]);
 
   // Handle Add Expense
   const handleAddExpense = async (e) => {

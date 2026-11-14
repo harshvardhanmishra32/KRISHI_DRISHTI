@@ -12,7 +12,9 @@ from app.db.session import get_db
 from app.services.weather_service import WeatherService
 from app.schemas.weather import WeatherResponse
 from app.models.farm import Farm
-from app.core.errors import AppException
+from app.models.user import User
+from app.routers.auth import get_optional_user
+from app.core.errors import AppException, NotFoundError, UnauthorizedError
 
 router = APIRouter(tags=["Weather"])
 
@@ -31,6 +33,7 @@ async def get_weather(
     lat: Optional[float] = Query(None, description="Latitude (e.g. 28.6139)", ge=-90.0, le=90.0),
     lon: Optional[float] = Query(None, description="Longitude (e.g. 77.2090)", ge=-180.0, le=180.0),
     farm_id: Optional[UUID] = Query(None, description="Optional Farm UUID to fetch coordinates from"),
+    current_user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -42,9 +45,11 @@ async def get_weather(
 
     # If farm_id provided, look up farm coordinates
     if farm_id is not None:
-        farm = db.query(Farm).filter(Farm.id == farm_id).first()
+        if current_user is None:
+            raise UnauthorizedError("Log in to retrieve weather for a registered farm.")
+        farm = db.query(Farm).filter(Farm.id == farm_id, Farm.user_id == current_user.id).first()
         if not farm:
-            raise AppException("FARM_NOT_FOUND", f"Farm with id '{farm_id}' does not exist.", 404)
+            raise NotFoundError("Farm not found.")
         target_lat = farm.latitude
         target_lon = farm.longitude
 

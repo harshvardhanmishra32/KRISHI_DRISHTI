@@ -1,6 +1,8 @@
-from fastapi import APIRouter, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from app.schemas.upload import ImageUploadResponse
 from app.services.upload_service import upload_service
+from app.routers.auth import get_current_user
+from app.core.rate_limit import rate_limit_uploads
 
 router = APIRouter(prefix="/api/v1/upload", tags=["Uploads"])
 
@@ -9,7 +11,8 @@ router = APIRouter(prefix="/api/v1/upload", tags=["Uploads"])
     "",
     response_model=ImageUploadResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Secure Image Upload"
+    summary="Secure Image Upload",
+    dependencies=[Depends(get_current_user), Depends(rate_limit_uploads)],
 )
 async def upload_image(file: UploadFile = File(...)):
     """

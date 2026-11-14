@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     Loads configurations from environment variables or .env file.
     """
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=("../.env", ".env"),
         env_file_encoding="utf-8",
         extra="ignore"
     )
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Krishi Drishti API"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    SECRET_KEY: str = "krishi_drishti_super_secret_jwt_key_change_in_production_9876543210"
+    SECRET_KEY: str
 
     @field_validator("SECRET_KEY")
     @classmethod

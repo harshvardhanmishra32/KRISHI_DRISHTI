@@ -5,6 +5,7 @@ Redis caching, database fallback, disease risk detection, and spray advice heuri
 """
 
 import pytest
+import uuid
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 
@@ -12,6 +13,11 @@ from app.main import app
 from app.core.config import settings
 
 client = TestClient(app)
+
+
+def test_weather_for_farm_requires_authentication():
+    response = client.get(f"/get-weather?farm_id={uuid.uuid4()}")
+    assert response.status_code == 401
 
 MOCK_CURRENT_WEATHER_HIGH_HUMIDITY = {
     "coord": {"lon": 77.21, "lat": 28.61},

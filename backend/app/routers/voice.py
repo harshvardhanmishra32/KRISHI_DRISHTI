@@ -13,6 +13,7 @@ from app.routers.auth import get_optional_user
 from app.schemas.voice import VoiceQueryResponse
 from app.services.voice_orchestrator import VoiceOrchestrator
 from app.core.errors import BadRequestError, FileTooLargeError
+from app.core.rate_limit import rate_limit_voice
 
 router = APIRouter(tags=["Voice Assistant"])
 
@@ -22,6 +23,7 @@ router = APIRouter(tags=["Voice Assistant"])
     response_model=VoiceQueryResponse,
     status_code=status.HTTP_200_OK,
     summary="Process multilingual voice or text query for Indian farmers",
+    dependencies=[Depends(rate_limit_voice)],
     description=(
         "Accepts recorded audio (WAV, MP3, OGG, WebM up to 30s / 5MB) or direct text query. "
         "Understands intents for weather, mandi price, disease help, soil advisories, and expenses in Hindi or English."

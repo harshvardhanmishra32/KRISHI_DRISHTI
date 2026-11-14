@@ -1,5 +1,19 @@
 import io
+import pytest
 from PIL import Image
+from app.main import app
+from app.routers.auth import get_current_user
+
+
+@pytest.fixture(autouse=True)
+def authenticated_uploads():
+    previous = app.dependency_overrides.get(get_current_user)
+    app.dependency_overrides[get_current_user] = lambda: object()
+    yield
+    if previous is None:
+        app.dependency_overrides.pop(get_current_user, None)
+    else:
+        app.dependency_overrides[get_current_user] = previous
 
 
 def create_test_image(format="JPEG", size=(500, 500), color=(0, 128, 0)) -> bytes:
@@ -8,6 +22,15 @@ def create_test_image(format="JPEG", size=(500, 500), color=(0, 128, 0)) -> byte
     img = Image.new("RGB", size, color=color)
     img.save(buf, format=format)
     return buf.getvalue()
+
+
+def test_upload_requires_auth(client):
+    app.dependency_overrides.pop(get_current_user, None)
+    response = client.post(
+        "/api/v1/upload",
+        files={"file": ("leaf.jpg", create_test_image(), "image/jpeg")}
+    )
+    assert response.status_code == 401
 
 
 def test_upload_valid_image(client):

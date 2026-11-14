@@ -505,7 +505,7 @@ export default function ScanPage() {
                 <Card className="bg-emerald-50/50 border-krishi-green/20">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-krishi-green mb-1">
                     <Sparkles className="w-3.5 h-3.5" />
-                    Doctor's Summary
+                    Doctor&apos;s Summary
                   </div>
                   <p className="text-xs text-krishi-text leading-relaxed">
                     {result.plain_explanation}

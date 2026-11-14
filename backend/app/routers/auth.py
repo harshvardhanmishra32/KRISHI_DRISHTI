@@ -11,6 +11,7 @@ from app.schemas.auth import SignupRequest, LoginRequest, TokenResponse, UserRes
 from app.services.user_service import user_service
 from app.core.security import create_access_token, decode_access_token
 from app.core.errors import UnauthorizedError, ForbiddenError
+from app.core.rate_limit import rate_limit_login
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 security = HTTPBearer(auto_error=False)
@@ -94,7 +95,8 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
     "/login",
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
-    summary="Login with Phone & Password"
+    summary="Login with Phone & Password",
+    dependencies=[Depends(rate_limit_login)],
 )
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     """
