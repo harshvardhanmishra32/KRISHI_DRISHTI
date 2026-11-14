@@ -86,3 +86,7 @@ Icon
 .idea/
 *.swp
 *.swo
+
+# Frontend source (overrides the generic Python lib/ build-directory rule)
+!frontend/src/lib/
+!frontend/src/lib/**
