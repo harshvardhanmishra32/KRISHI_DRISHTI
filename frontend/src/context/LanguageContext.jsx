@@ -22,7 +22,7 @@ export function LanguageProvider({ children }) {
     }
   }, []);
 
-  const setLanguage = (lang) => {
+  const changeLanguage = (lang) => {
     if (lang === "hi" || lang === "en") {
       setLanguageState(lang);
       try {
@@ -39,7 +39,7 @@ export function LanguageProvider({ children }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, changeLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
