@@ -26,6 +26,65 @@ from app.services.expense_service import ExpenseService
 from app.services.explainer import get_explainer
 from app.services.gemini_service import GeminiAdvisorService
 
+# Hindi localized dictionary mappings for voice advisories
+CROP_HI = {
+    "tomato": "टमाटर",
+    "potato": "आलू",
+    "wheat": "गेहूं",
+    "paddy": "धान",
+    "rice": "चावल",
+    "cotton": "कपास",
+    "mustard": "सरसों",
+    "onion": "प्याज",
+    "chickpea": "चना",
+    "sugarcane": "गन्ना",
+    "maize": "मक्का",
+    "chili": "मिर्च",
+    "garlic": "लहसुन",
+}
+
+CITY_HI = {
+    "lucknow": "लखनऊ",
+    "delhi": "दिल्ली",
+    "varanasi": "वाराणसी",
+    "nashik": "नासिक",
+    "pune": "पुणे",
+    "indore": "इंदौर",
+    "jaipur": "जयपुर",
+    "patna": "पटना",
+}
+
+WEATHER_DESC_HI = {
+    "clear sky": "आसमान साफ है",
+    "clear": "मौसम बिल्कुल साफ है",
+    "few clouds": "हल्के बादल छाए हैं",
+    "scattered clouds": "बादल छाए हैं",
+    "broken clouds": "आसमान में घने बादल हैं",
+    "overcast clouds": "आसमान में घने बादल हैं",
+    "clouds": "आसमान में बादल हैं",
+    "light rain": "हल्की बारिश हो रही है",
+    "moderate rain": "मध्यम बारिश हो रही है",
+    "heavy intensity rain": "तेज बारिश हो रही है",
+    "rain": "बारिश हो रही है",
+    "thunderstorm": "गरज-चमक के साथ आंधी",
+    "snow": "बर्फबारी",
+    "mist": "हल्का कोहरा है",
+    "smoke": "हल्का धुआं और धुंध है",
+    "haze": "हल्की धुंध है",
+    "dust": "धूल भरी हवाएं हैं",
+    "fog": "घना कोहरा है",
+    "sand": "रेत भरी हवाएं हैं",
+    "drizzle": "हल्की बूंदाबांदी हो रही है",
+}
+
+RISK_LEVEL_HI = {
+    "none": "कोई खतरा नहीं",
+    "low": "कम",
+    "moderate": "मध्यम",
+    "high": "अधिक (सावधानी रखें)",
+    "critical": "गंभीर",
+}
+
 
 class VoiceOrchestrator:
 
@@ -139,10 +198,26 @@ class VoiceOrchestrator:
                 weather_service = WeatherService(self.db)
                 w = await weather_service.get_weather(lat, lon)
                 if lang == "hi":
+                    desc_key = (w.current.description or "").strip().lower()
+                    desc_hi = WEATHER_DESC_HI.get(desc_key, "मौसम साफ है")
+
+                    risk_key = (w.disease_risk.level or "").strip().lower()
+                    risk_hi = RISK_LEVEL_HI.get(risk_key, "कोई खतरा नहीं")
+
+                    if w.spray_advice.is_recommended:
+                        spray_hi = (
+                            "अगले 48 घंटों में कीटनाशक छिड़काव के लिए अनुकूल समय है। "
+                            "हवा की गति सामान्य है और बारिश का खतरा नहीं है।"
+                        )
+                    else:
+                        spray_hi = (
+                            "अगले 48 घंटों में तेज हवा या बारिश की संभावना के कारण कीटनाशक छिड़काव टालने की सलाह दी जाती है।"
+                        )
+
                     return (
-                        f"आज का तापमान {w.current.temperature:.1f}°C और नमी {w.current.humidity:.0f}% है। "
-                        f"मौसम: {w.current.description}। रोग का जोखिम: {w.disease_risk.level}। "
-                        f"छिड़काव सलाह: {w.spray_advice.summary}"
+                        f"आज का तापमान {w.current.temperature:.1f} डिग्री सेल्सियस और नमी {w.current.humidity:.0f} प्रतिशत है। "
+                        f"मौसम की स्थिति: {desc_hi}। फसल रोग का जोखिम: {risk_hi}। "
+                        f"छिड़काव सलाह: {spray_hi}"
                     )
                 return (
                     f"Today's temperature is {w.current.temperature:.1f}°C with {w.current.humidity:.0f}% humidity. "
@@ -161,9 +236,11 @@ class VoiceOrchestrator:
                 price_service = PriceService(self.db)
                 p = price_service.get_market_price(crop_name=crop_name, district=place)
                 if lang == "hi":
+                    crop_hi = CROP_HI.get(p.crop.lower(), p.crop)
+                    mandi_hi = CITY_HI.get(p.mandi.lower(), p.mandi)
                     return (
-                        f"{p.mandi} में {p.crop} का औसत भाव ₹{p.modal_price} प्रति क्विंटल है "
-                        f"(न्यूनतम ₹{p.min_price}, अधिकतम ₹{p.max_price})।"
+                        f"{mandi_hi} मंडी में {crop_hi} का औसत भाव ₹{int(p.modal_price)} प्रति क्विंटल है "
+                        f"(न्यूनतम भाव ₹{int(p.min_price)}, अधिकतम भाव ₹{int(p.max_price)})।"
                     )
                 return (
                     f"In {p.mandi}, the average price for {p.crop} is ₹{p.modal_price} per quintal "
@@ -179,10 +256,11 @@ class VoiceOrchestrator:
             if crop_name:
                 crop = self.db.query(Crop).filter(Crop.name.ilike(crop_name)).first()
                 if crop:
+                    crop_hi = CROP_HI.get(crop.name.lower(), crop.name)
                     disease = self.db.query(Disease).filter(Disease.crop_id == crop.id).first()
                     if disease:
                         if lang == "hi":
-                            return f"{crop.name} की मुख्य बीमारी: {disease.name}। लक्षण: {disease.symptoms}। कृपया पत्ती की फोटो स्कैन करें।"
+                            return f"{crop_hi} की मुख्य बीमारी '{disease.name}' है। लक्षण: {disease.symptoms}। सटीक जांच और दवा के लिए पत्ती की फोटो स्कैन करें।"
                         return f"Common {crop.name} disease: {disease.name}. Symptoms: {disease.symptoms}. Please scan a leaf photo for exact diagnosis."
 
             if lang == "hi":
