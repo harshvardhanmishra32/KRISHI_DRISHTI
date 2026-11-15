@@ -6,8 +6,8 @@ Provides market price lookup with Redis 6h caching, PostgreSQL persistence, and 
 import csv
 import datetime
 import json
-import os
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -27,20 +27,26 @@ class PriceService:
     def __init__(self, db: Session):
         self.db = db
         self.redis = get_redis_client()
+        self.crop_map: dict[str, str] = {}
         self._load_crop_map()
 
-    def _load_crop_map(self):
+    def _load_crop_map(self) -> None:
+        base_dir = Path(__file__).resolve().parents[2]
         map_paths = [
-            "backend/data/crop_commodity_map.json",
-            "data/crop_commodity_map.json",
-            "/Users/harshvardhanmishra/Desktop/Krishi Drishti/backend/data/crop_commodity_map.json",
+            base_dir / "data" / "crop_commodity_map.json",
+            Path("backend/data/crop_commodity_map.json"),
+            Path("data/crop_commodity_map.json"),
         ]
-        self.crop_map: dict[str, str] = {}
         for p in map_paths:
-            if os.path.exists(p):
-                with open(p, "r", encoding="utf-8") as f:
-                    self.crop_map = json.load(f)
-                break
+            if p.exists():
+                try:
+                    with open(p, "r", encoding="utf-8") as f:
+                        loaded = json.load(f)
+                        if isinstance(loaded, dict):
+                            self.crop_map = {str(k): str(v) for k, v in loaded.items()}
+                    break
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(f"Failed to read crop commodity map from {p}: {exc}")
 
     def get_market_price(
         self,
@@ -59,14 +65,18 @@ class PriceService:
         cache_key = f"mandi_price:{crop_clean}:{state_clean.lower()}:{district_clean.lower()}"
 
         # 1. Check Redis Cache
-        try:
-            cached_data = self.redis.get(cache_key)
-            if isinstance(cached_data, (str, bytes)):
-                logger.info(f"Serving Mandi price from Redis cache: {cache_key}")
-                data_dict = json.loads(cached_data)
-                return MarketPriceResponse(**data_dict)
-        except Exception as e:  # noqa: BLE001
-            logger.warning(f"Redis cache check failed: {e}")
+        if self.redis:
+            try:
+                cached_data = self.redis.get(cache_key)
+                if isinstance(cached_data, (str, bytes)):
+                    logger.info(f"Serving Mandi price from Redis cache: {cache_key}")
+                    if isinstance(cached_data, bytes):
+                        cached_str = cached_data.decode("utf-8")
+                    else:
+                        cached_str = cached_data
+                    return MarketPriceResponse.model_validate_json(cached_str)
+            except Exception as e:  # noqa: BLE001
+                logger.warning(f"Redis cache check failed: {e}")
 
         # 2. Check Database for recent price
         db_price = (
@@ -105,22 +115,22 @@ class PriceService:
             trend_items = [
                 PriceTrendItem(
                     date=r.price_date,
-                    min_price=r.price_per_quintal * Decimal("0.90"),
-                    max_price=r.price_per_quintal * Decimal("1.10"),
-                    modal_price=r.price_per_quintal,
+                    min_price=round(r.price_per_quintal * Decimal("0.90"), 2),
+                    max_price=round(r.price_per_quintal * Decimal("1.10"), 2),
+                    modal_price=round(r.price_per_quintal, 2),
                 )
                 for r in reversed(trend_rows)
             ]
 
             response = MarketPriceResponse(
-                crop=crop.name,
-                commodity=self.crop_map.get(crop_clean, crop.name),
-                mandi=db_price.mandi_name,
-                district=db_price.district,
-                state=db_price.state,
-                min_price=db_price.price_per_quintal * Decimal("0.90"),
-                max_price=db_price.price_per_quintal * Decimal("1.10"),
-                modal_price=db_price.price_per_quintal,
+                crop=str(crop.name),
+                commodity=self.crop_map.get(crop_clean, str(crop.name)),
+                mandi=str(db_price.mandi_name),
+                district=str(db_price.district),
+                state=str(db_price.state),
+                min_price=round(db_price.price_per_quintal * Decimal("0.90"), 2),
+                max_price=round(db_price.price_per_quintal * Decimal("1.10"), 2),
+                modal_price=round(db_price.price_per_quintal, 2),
                 unit="Rs/Quintal",
                 price_date=price_date,
                 is_stale=is_stale,
@@ -134,13 +144,13 @@ class PriceService:
         # 3. Fallback: Load from CSV sample
         fallback_item = self._find_in_sample_csv(crop_clean, state_clean, district_clean)
         if fallback_item:
-            mandi_name = fallback_item["market"]
-            st_name = fallback_item["state"]
-            dist_name = fallback_item["district"]
+            mandi_name = str(fallback_item["market"])
+            st_name = str(fallback_item["state"])
+            dist_name = str(fallback_item["district"])
             min_p = Decimal(str(fallback_item["min_price"]))
             max_p = Decimal(str(fallback_item["max_price"]))
             modal_p = Decimal(str(fallback_item["modal_price"]))
-            p_date = datetime.date.fromisoformat(fallback_item["arrival_date"])
+            p_date = datetime.date.fromisoformat(str(fallback_item["arrival_date"]))
 
             # Upsert into PostgreSQL market_prices
             existing = (
@@ -177,16 +187,16 @@ class PriceService:
             trend_items = [
                 PriceTrendItem(
                     date=p_date - datetime.timedelta(days=i),
-                    min_price=min_p - Decimal(i * 10),
-                    max_price=max_p - Decimal(i * 10),
-                    modal_price=modal_p - Decimal(i * 10),
+                    min_price=max(Decimal("1.00"), min_p - Decimal(i * 10)),
+                    max_price=max(Decimal("1.00"), max_p - Decimal(i * 10)),
+                    modal_price=max(Decimal("1.00"), modal_p - Decimal(i * 10)),
                 )
                 for i in range(5, -1, -1)
             ]
 
             response = MarketPriceResponse(
-                crop=crop.name,
-                commodity=fallback_item["commodity"],
+                crop=str(crop.name),
+                commodity=str(fallback_item["commodity"]),
                 mandi=mandi_name,
                 district=dist_name,
                 state=st_name,
@@ -217,21 +227,34 @@ class PriceService:
             "cabbage": Decimal(1400),
         }
         modal_p = default_prices.get(crop_clean, Decimal(2000))
+        min_p = round(modal_p * Decimal("0.85"), 2)
+        max_p = round(modal_p * Decimal("1.15"), 2)
+
+        trend_items = [
+            PriceTrendItem(
+                date=today - datetime.timedelta(days=i),
+                min_price=max(Decimal("1.00"), min_p - Decimal(i * 10)),
+                max_price=max(Decimal("1.00"), max_p - Decimal(i * 10)),
+                modal_price=max(Decimal("1.00"), modal_p - Decimal(i * 10)),
+            )
+            for i in range(5, -1, -1)
+        ]
+
         response = MarketPriceResponse(
-            crop=crop.name,
-            commodity=self.crop_map.get(crop_clean, crop.name),
+            crop=str(crop.name),
+            commodity=self.crop_map.get(crop_clean, str(crop.name)),
             mandi=f"{district_clean} Central Mandi",
             district=district_clean,
             state=state_clean,
-            min_price=modal_p * Decimal("0.85"),
-            max_price=modal_p * Decimal("1.15"),
+            min_price=min_p,
+            max_price=max_p,
             modal_price=modal_p,
             unit="Rs/Quintal",
             price_date=today,
             is_stale=False,
             staleness_warning=None,
             source="sample data",
-            trend_7d=[],
+            trend_7d=trend_items,
         )
         self._cache_response(cache_key, response)
         return response
@@ -239,15 +262,16 @@ class PriceService:
     def _find_in_sample_csv(
         self, crop_clean: str, state: str, district: str
     ) -> dict[str, Any] | None:
+        base_dir = Path(__file__).resolve().parents[2]
         csv_paths = [
-            "backend/data/mandi_sample.csv",
-            "data/mandi_sample.csv",
-            "/Users/harshvardhanmishra/Desktop/Krishi Drishti/backend/data/mandi_sample.csv",
+            base_dir / "data" / "mandi_sample.csv",
+            Path("backend/data/mandi_sample.csv"),
+            Path("data/mandi_sample.csv"),
         ]
         target_commodity = self.crop_map.get(crop_clean, crop_clean)
 
         for path in csv_paths:
-            if not os.path.exists(path):
+            if not path.exists():
                 continue
             with open(path, mode="r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
@@ -276,7 +300,9 @@ class PriceService:
                         return r
         return None
 
-    def _cache_response(self, cache_key: str, response: MarketPriceResponse):
+    def _cache_response(self, cache_key: str, response: MarketPriceResponse) -> None:
+        if not self.redis:
+            return
         try:
             data_json = response.model_dump_json()
             self.redis.setex(cache_key, REDIS_PRICE_TTL_SECONDS, data_json)
