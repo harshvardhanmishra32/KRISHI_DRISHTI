@@ -3,11 +3,32 @@ Krishi Drishti - Speech to Text (STT) Module (P20).
 Integrates faster-whisper with graceful fallback when audio decoding is unavailable.
 """
 
-import os
+import io
 from typing import Optional
+import numpy as np
 from app.core.logging import logger
 
 _whisper_model = None
+
+
+def _decode_audio(audio_bytes: bytes) -> np.ndarray:
+    """Decode browser-recorded audio to the 16 kHz mono samples Whisper expects."""
+    import av
+
+    resampler = av.audio.resampler.AudioResampler(
+        format="s16", layout="mono", rate=16000
+    )
+    chunks = []
+    with av.open(io.BytesIO(audio_bytes), mode="r") as container:
+        for frame in container.decode(audio=0):
+            for resampled in resampler.resample(frame):
+                chunks.append(resampled.to_ndarray().reshape(-1))
+        for resampled in resampler.resample(None):
+            chunks.append(resampled.to_ndarray().reshape(-1))
+
+    if not chunks:
+        raise ValueError("Audio file contains no readable samples.")
+    return np.concatenate(chunks).astype(np.float32) / 32768.0
 
 
 def load_stt_model(model_size: str = "tiny"):
@@ -34,16 +55,10 @@ def transcribe_audio(audio_bytes: bytes, language_hint: Optional[str] = "hi") ->
     global _whisper_model
 
     if _whisper_model is not None:
-        import io
-        import tempfile
         try:
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-                tmp.write(audio_bytes)
-                tmp_path = tmp.name
-
-            segments, _ = _whisper_model.transcribe(tmp_path, language=language_hint)
+            samples = _decode_audio(audio_bytes)
+            segments, _ = _whisper_model.transcribe(samples, language=language_hint)
             transcript = " ".join([seg.text for seg in segments]).strip()
-            os.remove(tmp_path)
             return transcript if transcript else None
         except Exception as e:
             logger.warning(f"Whisper inference error: {e}")

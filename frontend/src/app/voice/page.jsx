@@ -47,6 +47,7 @@ export default function VoicePage() {
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const speechRecognitionRef = useRef(null);
   const timerRef = useRef(null);
   const audioPlayerRef = useRef(null);
 
@@ -60,9 +61,108 @@ export default function VoicePage() {
     changeLanguage(lang);
   };
 
+  const clearRecordingTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const submitTextQuery = async (query) => {
+    setError(null);
+    setPipelineStage("thinking");
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), sender: "user", text: query },
+    ]);
+
+    try {
+      const formData = new FormData();
+      formData.append("query_text", query);
+      formData.append("language", activeLang);
+      const res = await api.post("/voice-query", formData);
+      handleServerResponse(res, false);
+    } catch (err) {
+      setError(err.message || "Failed to process question.");
+      setPipelineStage(null);
+    }
+  };
+
+  // Use the browser's speech recognition first. It works without the optional
+  // server-side Whisper package and returns the transcript before calling the API.
+  const startBrowserRecognition = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return false;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = activeLang === "hi" ? "hi-IN" : "en-IN";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      setPipelineStage("listening");
+      setRecordSeconds(0);
+      timerRef.current = setInterval(() => {
+        setRecordSeconds((seconds) => {
+          if (seconds >= 29) {
+            recognition.stop();
+            return 30;
+          }
+          return seconds + 1;
+        });
+      }, 1000);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+      speechRecognitionRef.current = null;
+      clearRecordingTimer();
+      setIsRecording(false);
+      if (transcript) {
+        submitTextQuery(transcript);
+      } else {
+        setPipelineStage(null);
+        setError("I could not hear a question. Please try again.");
+      }
+    };
+
+    recognition.onerror = (event) => {
+      speechRecognitionRef.current = null;
+      clearRecordingTimer();
+      setIsRecording(false);
+      setPipelineStage(null);
+      const message =
+        event.error === "not-allowed"
+          ? "Microphone permission is required for voice questions."
+          : event.error === "no-speech"
+          ? "I could not hear a question. Please try again."
+          : "Voice recognition is unavailable. Please type your question.";
+      setError(message);
+    };
+
+    recognition.onend = () => {
+      clearRecordingTimer();
+      setIsRecording(false);
+    };
+
+    try {
+      speechRecognitionRef.current = recognition;
+      recognition.start();
+      return true;
+    } catch {
+      speechRecognitionRef.current = null;
+      return false;
+    }
+  };
+
   // Start Voice Recording
   const startRecording = async () => {
     setError(null);
+    if (startBrowserRecognition()) return;
+
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setError(t("mic_error"));
       return;
@@ -108,7 +208,8 @@ export default function VoicePage() {
       timerRef.current = setInterval(() => {
         setRecordSeconds((sec) => {
           if (sec >= 29) {
-            stopRecording();
+            mediaRecorder.stop();
+            clearRecordingTimer();
             return 30;
           }
           return sec + 1;
@@ -124,12 +225,13 @@ export default function VoicePage() {
 
   // Stop Recording
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.stop();
+      speechRecognitionRef.current = null;
+    } else if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
     }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
+    clearRecordingTimer();
     setIsRecording(false);
   };
 
@@ -150,34 +252,13 @@ export default function VoicePage() {
   };
 
   // Send Text Query Fallback
-  const handleTextSubmit = async (e) => {
+  const handleTextSubmit = (e) => {
     e.preventDefault();
     const query = textInput.trim();
     if (!query) return;
 
-    setError(null);
     setTextInput("");
-    setPipelineStage("thinking");
-
-    // Add user message to thread immediately
-    const userMsg = {
-      id: Date.now().toString(),
-      sender: "user",
-      text: query,
-    };
-    setMessages((prev) => [...prev, userMsg]);
-
-    try {
-      const formData = new FormData();
-      formData.append("query_text", query);
-      formData.append("language", activeLang);
-
-      const res = await api.post("/voice-query", formData);
-      handleServerResponse(res, false);
-    } catch (err) {
-      setError(err.message || "Failed to process question.");
-      setPipelineStage(null);
-    }
+    submitTextQuery(query);
   };
 
   // Handle Response from API
