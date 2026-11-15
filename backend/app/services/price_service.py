@@ -93,7 +93,12 @@ class PriceService:
         today = datetime.date.today()
 
         if db_price:
-            price_date = db_price.price_date
+            price_date = (
+                db_price.price_date
+                if isinstance(db_price.price_date, datetime.date)
+                else datetime.date.fromisoformat(str(db_price.price_date))
+            )
+            db_modal_price = Decimal(str(db_price.price_per_quintal))
             is_stale = (today - price_date).days > 3
             warning = (
                 f"Data is {(today - price_date).days} days old. Real-time market arrivals may vary."
@@ -112,15 +117,22 @@ class PriceService:
                 .limit(7)
                 .all()
             )
-            trend_items = [
-                PriceTrendItem(
-                    date=r.price_date,
-                    min_price=round(r.price_per_quintal * Decimal("0.90"), 2),
-                    max_price=round(r.price_per_quintal * Decimal("1.10"), 2),
-                    modal_price=round(r.price_per_quintal, 2),
+            trend_items: list[PriceTrendItem] = []
+            for r in reversed(trend_rows):
+                r_date = (
+                    r.price_date
+                    if isinstance(r.price_date, datetime.date)
+                    else datetime.date.fromisoformat(str(r.price_date))
                 )
-                for r in reversed(trend_rows)
-            ]
+                r_modal = Decimal(str(r.price_per_quintal))
+                trend_items.append(
+                    PriceTrendItem(
+                        date=r_date,
+                        min_price=round(r_modal * Decimal("0.90"), 2),
+                        max_price=round(r_modal * Decimal("1.10"), 2),
+                        modal_price=round(r_modal, 2),
+                    )
+                )
 
             response = MarketPriceResponse(
                 crop=str(crop.name),
@@ -128,9 +140,9 @@ class PriceService:
                 mandi=str(db_price.mandi_name),
                 district=str(db_price.district),
                 state=str(db_price.state),
-                min_price=round(db_price.price_per_quintal * Decimal("0.90"), 2),
-                max_price=round(db_price.price_per_quintal * Decimal("1.10"), 2),
-                modal_price=round(db_price.price_per_quintal, 2),
+                min_price=round(db_modal_price * Decimal("0.90"), 2),
+                max_price=round(db_modal_price * Decimal("1.10"), 2),
+                modal_price=round(db_modal_price, 2),
                 unit="Rs/Quintal",
                 price_date=price_date,
                 is_stale=is_stale,
