@@ -5,25 +5,26 @@ Handles real-time OpenWeather API calls (Current Weather + 5-Day Forecast),
 and optimal agricultural spray window calculation.
 """
 
-import json
 import datetime
-from typing import Optional, Tuple, Dict, Any, List
+import json
 from collections import defaultdict
+from typing import Any
+
 import httpx
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.errors import AppException
 from app.core.logging import logger
 from app.core.redis import get_redis_client
-from app.core.errors import AppException
 from app.models.weather import WeatherCache
 from app.schemas.weather import (
-    WeatherResponse,
     CurrentWeather,
     DailyForecast,
     DiseaseRiskAlert,
     SprayAdvice,
-    SprayWindow
+    SprayWindow,
+    WeatherResponse,
 )
 
 OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5"
@@ -35,7 +36,7 @@ class WeatherService:
         self.redis = get_redis_client()
 
     @staticmethod
-    def round_coords(lat: float, lon: float) -> Tuple[float, float]:
+    def round_coords(lat: float, lon: float) -> tuple[float, float]:
         """Round coordinates to 2 decimal places (~1.1 km accuracy) for efficient caching."""
         return round(float(lat), 2), round(float(lon), 2)
 
@@ -62,7 +63,7 @@ class WeatherService:
                     logger.info(f"Weather cache hit in Redis for ({lat_rounded}, {lon_rounded})")
                     parsed = json.loads(cached_data)
                     return WeatherResponse(**parsed)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"Redis cache read error: {e}")
 
         # 2. Call OpenWeatherMap APIs with retry
@@ -78,13 +79,13 @@ class WeatherService:
                             datetime.timedelta(minutes=settings.WEATHER_CACHE_MINUTES),
                             live_weather.model_dump_json()
                         )
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001
                         logger.warning(f"Redis cache write error: {e}")
 
                 # Upsert into PostgreSQL weather_cache
                 self._upsert_db_cache(lat_rounded, lon_rounded, live_weather)
                 return live_weather
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"OpenWeather API call failed: {e}")
 
         # 3. Fallback: Retrieve stale weather from PostgreSQL weather_cache
@@ -109,7 +110,7 @@ class WeatherService:
                     "Weather provider is currently unreachable."
                 )
                 return WeatherResponse(**fallback_data)
-        except Exception as cache_err:
+        except Exception as cache_err:  # noqa: BLE001
             logger.warning(f"DB cache read error: {cache_err}")
 
         # 4. Synthesize robust agricultural weather model if external API and DB cache are both unavailable
@@ -129,7 +130,7 @@ class WeatherService:
         Calculates realistic seasonal temperature, diurnal curve, fungal risk, and safe spray windows.
         """
         today = datetime.date.today()
-        now_dt = datetime.datetime.now(datetime.timezone.utc)
+        now_dt = datetime.datetime.now(datetime.UTC)
 
         # Infer region name from coordinates
         city_name = "North Central Farm"
@@ -165,8 +166,8 @@ class WeatherService:
         )
 
         # 5-Day Daily Forecast
-        daily_forecasts: List[DailyForecast] = []
-        forecast_slots: List[Dict[str, Any]] = []
+        daily_forecasts: list[DailyForecast] = []
+        forecast_slots: list[dict[str, Any]] = []
 
         day_offsets = [
             (0, "Clear Sky", "01d", 26.8, 16.5, 65.0, 5.0, 0.0),
@@ -245,7 +246,7 @@ class WeatherService:
                         break
                 except httpx.RequestError as exc:
                     if attempt == 1:
-                        raise exc
+                        raise
                     logger.warning(f"OpenWeather request error on attempt {attempt + 1}: {exc}. Retrying...")
 
         if not current_resp or current_resp.status_code != 200:
@@ -292,7 +293,7 @@ class WeatherService:
             date_str = dt_txt.split(" ")[0]
             daily_groups[date_str].append(slot)
 
-        daily_forecasts: List[DailyForecast] = []
+        daily_forecasts: list[DailyForecast] = []
         for date_str, slots in list(daily_groups.items())[:5]:
             temps = [s["main"]["temp"] for s in slots]
             humidities = [s["main"]["humidity"] for s in slots]
@@ -327,7 +328,7 @@ class WeatherService:
         # Calculate Spray Advice for next 48 hours
         spray_advice = self._calculate_spray_advice(forecast_slots[:16])
 
-        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        now_iso = datetime.datetime.now(datetime.UTC).isoformat()
         return WeatherResponse(
             coordinates={"latitude": lat, "longitude": lon},
             current=current_obj,
@@ -339,7 +340,7 @@ class WeatherService:
             message="Live weather data fetched successfully"
         )
 
-    def _calculate_disease_risk(self, current_humidity: float, forecast: List[DailyForecast]) -> DiseaseRiskAlert:
+    def _calculate_disease_risk(self, current_humidity: float, forecast: list[DailyForecast]) -> DiseaseRiskAlert:
         """Determines fungal/bacterial disease risk based on humidity and rain."""
         high_humidity_threshold = settings.HIGH_HUMIDITY_DISEASE_THRESHOLD
         avg_forecast_humidity = (
@@ -369,7 +370,7 @@ class WeatherService:
                 reason="Favorable dry canopy conditions. Disease spread risk is low."
             )
 
-    def _calculate_spray_advice(self, slots_48h: List[Dict[str, Any]]) -> SprayAdvice:
+    def _calculate_spray_advice(self, slots_48h: list[dict[str, Any]]) -> SprayAdvice:
         """
         Evaluates forecast slots in the next 48 hours to find optimal pesticide/fertilizer spraying windows.
         Conditions:
@@ -378,7 +379,7 @@ class WeatherService:
         - Temperature < 35°C (prevents leaf scorching/volatilization)
         - Preferred hours: Morning (06:00 - 09:00) and Evening (17:00 - 19:00).
         """
-        suitable_windows: List[SprayWindow] = []
+        suitable_windows: list[SprayWindow] = []
 
         for s in slots_48h:
             dt_txt = s.get("dt_txt", "") # "YYYY-MM-DD HH:MM:SS"
@@ -450,7 +451,7 @@ class WeatherService:
                 .first()
             )
 
-            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            now_utc = datetime.datetime.now(datetime.UTC)
             if cached_row:
                 cached_row.temperature = weather.current.temperature
                 cached_row.humidity = weather.current.humidity
@@ -470,6 +471,6 @@ class WeatherService:
                 self.db.add(new_cache)
 
             self.db.commit()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             self.db.rollback()
             logger.warning(f"Failed to upsert DB weather cache: {e}")

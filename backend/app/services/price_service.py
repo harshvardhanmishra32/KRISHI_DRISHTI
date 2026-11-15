@@ -3,19 +3,18 @@ Krishi Drishti - Mandi Market Price Service (P16).
 Provides market price lookup with Redis 6h caching, PostgreSQL persistence, and sample CSV fallback.
 """
 
-import os
 import csv
-import json
 import datetime
+import json
+import os
 from decimal import Decimal
-from typing import Optional, List, Dict, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from typing import Any
 
-from app.core.config import settings
+from sqlalchemy.orm import Session
+
+from app.core.errors import NotFoundError
 from app.core.logging import logger
 from app.core.redis import get_redis_client
-from app.core.errors import NotFoundError, BadRequestError
 from app.models.crop import Crop
 from app.models.finance import MarketPrice
 from app.schemas.price import MarketPriceResponse, PriceTrendItem
@@ -36,7 +35,7 @@ class PriceService:
             "data/crop_commodity_map.json",
             "/Users/harshvardhanmishra/Desktop/Krishi Drishti/backend/data/crop_commodity_map.json",
         ]
-        self.crop_map: Dict[str, str] = {}
+        self.crop_map: dict[str, str] = {}
         for p in map_paths:
             if os.path.exists(p):
                 with open(p, "r", encoding="utf-8") as f:
@@ -46,8 +45,8 @@ class PriceService:
     def get_market_price(
         self,
         crop_name: str,
-        state: Optional[str] = None,
-        district: Optional[str] = None,
+        state: str | None = None,
+        district: str | None = None,
     ) -> MarketPriceResponse:
         crop_clean = crop_name.strip().lower()
         crop = self.db.query(Crop).filter(Crop.name.ilike(crop_clean)).first()
@@ -66,7 +65,7 @@ class PriceService:
                 logger.info(f"Serving Mandi price from Redis cache: {cache_key}")
                 data_dict = json.loads(cached_data)
                 return MarketPriceResponse(**data_dict)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Redis cache check failed: {e}")
 
         # 2. Check Database for recent price
@@ -77,7 +76,7 @@ class PriceService:
                 MarketPrice.state.ilike(state_clean),
                 MarketPrice.district.ilike(district_clean),
             )
-            .order_by(desc(MarketPrice.price_date))
+            .order_by(MarketPrice.price_date.desc())
             .first()
         )
 
@@ -99,7 +98,7 @@ class PriceService:
                     MarketPrice.state.ilike(state_clean),
                     MarketPrice.district.ilike(district_clean),
                 )
-                .order_by(desc(MarketPrice.price_date))
+                .order_by(MarketPrice.price_date.desc())
                 .limit(7)
                 .all()
             )
@@ -165,7 +164,7 @@ class PriceService:
                 self.db.add(new_price)
                 try:
                     self.db.commit()
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     self.db.rollback()
                     logger.warning(f"Could not persist fallback price to DB: {e}")
 
@@ -206,18 +205,18 @@ class PriceService:
 
         # 4. If crop not in CSV, synthesize a reasonable default based on known MSP
         default_prices = {
-            "wheat": Decimal("2275"),
-            "paddy": Decimal("2183"),
-            "tomato": Decimal("1800"),
-            "potato": Decimal("1300"),
-            "cotton": Decimal("6620"),
-            "chickpea": Decimal("5440"),
-            "sugarcane": Decimal("350"),
-            "onion": Decimal("1900"),
-            "brinjal": Decimal("1500"),
-            "cabbage": Decimal("1400"),
+            "wheat": Decimal(2275),
+            "paddy": Decimal(2183),
+            "tomato": Decimal(1800),
+            "potato": Decimal(1300),
+            "cotton": Decimal(6620),
+            "chickpea": Decimal(5440),
+            "sugarcane": Decimal(350),
+            "onion": Decimal(1900),
+            "brinjal": Decimal(1500),
+            "cabbage": Decimal(1400),
         }
-        modal_p = default_prices.get(crop_clean, Decimal("2000"))
+        modal_p = default_prices.get(crop_clean, Decimal(2000))
         response = MarketPriceResponse(
             crop=crop.name,
             commodity=self.crop_map.get(crop_clean, crop.name),
@@ -239,7 +238,7 @@ class PriceService:
 
     def _find_in_sample_csv(
         self, crop_clean: str, state: str, district: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         csv_paths = [
             "backend/data/mandi_sample.csv",
             "data/mandi_sample.csv",
@@ -281,5 +280,5 @@ class PriceService:
         try:
             data_json = response.model_dump_json()
             self.redis.setex(cache_key, REDIS_PRICE_TTL_SECONDS, data_json)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"Failed to cache Mandi price in Redis: {e}")
