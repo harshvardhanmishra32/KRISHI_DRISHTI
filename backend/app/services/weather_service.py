@@ -62,7 +62,8 @@ class WeatherService:
                 if isinstance(cached_data, (str, bytes)):
                     logger.info(f"Weather cache hit in Redis for ({lat_rounded}, {lon_rounded})")
                     parsed = json.loads(cached_data)
-                    return WeatherResponse(**parsed)
+                    if isinstance(parsed, dict):
+                        return WeatherResponse.model_validate(parsed)
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"Redis cache read error: {e}")
 
@@ -101,15 +102,15 @@ class WeatherService:
                 .first()
             )
 
-            if db_cache and db_cache.forecast_json:
-                fallback_data = db_cache.forecast_json
+            if db_cache and isinstance(db_cache.forecast_json, dict):
+                fallback_data: dict[str, Any] = dict(db_cache.forecast_json)
                 fallback_data["stale"] = True
                 fallback_data["cached_at"] = db_cache.fetched_at.isoformat()
                 fallback_data["message"] = (
                     f"Served from offline cache recorded on {db_cache.fetched_at.strftime('%d %b %Y %H:%M UTC')}. "
                     "Weather provider is currently unreachable."
                 )
-                return WeatherResponse(**fallback_data)
+                return WeatherResponse.model_validate(fallback_data)
         except Exception as cache_err:  # noqa: BLE001
             logger.warning(f"DB cache read error: {cache_err}")
 
