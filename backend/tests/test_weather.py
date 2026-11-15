@@ -138,6 +138,14 @@ def test_weather_normal_conditions(monkeypatch):
             return MockResponse(MOCK_FORECAST)
         return MockResponse({}, 404)
 
+    from app.core.redis import get_redis_client
+    redis_client = get_redis_client()
+    if redis_client:
+        try:
+            redis_client.delete("weather:28.61:77.21")
+        except Exception:
+            pass
+
     with patch("httpx.AsyncClient.get", mock_get):
         response = client.get("/get-weather?lat=28.61&lon=77.21")
         assert response.status_code == 200

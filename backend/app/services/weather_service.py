@@ -58,7 +58,7 @@ class WeatherService:
         if self.redis:
             try:
                 cached_data = self.redis.get(redis_key)
-                if cached_data:
+                if isinstance(cached_data, (str, bytes)):
                     logger.info(f"Weather cache hit in Redis for ({lat_rounded}, {lon_rounded})")
                     parsed = json.loads(cached_data)
                     return WeatherResponse(**parsed)

@@ -62,7 +62,7 @@ class PriceService:
         # 1. Check Redis Cache
         try:
             cached_data = self.redis.get(cache_key)
-            if cached_data:
+            if isinstance(cached_data, (str, bytes)):
                 logger.info(f"Serving Mandi price from Redis cache: {cache_key}")
                 data_dict = json.loads(cached_data)
                 return MarketPriceResponse(**data_dict)
