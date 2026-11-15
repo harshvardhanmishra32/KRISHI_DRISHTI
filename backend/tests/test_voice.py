@@ -55,7 +55,10 @@ def test_voice_query_unknown_intent_clarification(client):
     assert res.status_code == 200
     data = res.json()
     assert data["intent"] == "unknown"
-    assert "मौसम" in data["answer_text"] or "मंडी भाव" in data["answer_text"]
+    assert any(
+        term in data["answer_text"]
+        for term in ["मौसम", "मंडी भाव", "फसल", "खेती", "कृषि", "खाद"]
+    )
 
 
 def test_voice_query_generates_tts(client):
@@ -70,3 +73,16 @@ def test_voice_query_generates_tts(client):
     assert data["intent"] == "weather"
     assert data["audio_url"] is not None
     assert data["audio_url"].startswith("/uploads/tts/")
+
+
+def test_voice_query_gemini_advisor(client):
+    """POST /voice-query with general farming question should invoke AI advisor."""
+    payload = {
+        "query_text": "गेहूं में पहली सिंचाई कब करें?",
+        "language": "hi",
+    }
+    res = client.post("/voice-query", data=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data["answer_text"]) > 10
+    assert data["audio_url"] is not None

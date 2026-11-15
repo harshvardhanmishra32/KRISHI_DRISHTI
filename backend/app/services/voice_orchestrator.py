@@ -24,6 +24,7 @@ from app.services.price_service import PriceService
 from app.services.crop_advisor import CropAdvisorService
 from app.services.expense_service import ExpenseService
 from app.services.explainer import get_explainer
+from app.services.gemini_service import GeminiAdvisorService
 
 
 class VoiceOrchestrator:
@@ -83,7 +84,9 @@ class VoiceOrchestrator:
         intent, slots = NluEngine.extract_intent_and_slots(transcript, default_lang=language)
 
         # 3. Domain Dispatch
-        answer_text = await self._dispatch_intent(intent, slots, user, language)
+        answer_text = await self._dispatch_intent(
+            intent, slots, user, language, transcript=transcript
+        )
 
         # 4. Generate TTS audio (optional, graceful fallback to text only)
         audio_url = self._generate_tts(answer_text, language)
@@ -116,7 +119,12 @@ class VoiceOrchestrator:
         )
 
     async def _dispatch_intent(
-        self, intent: str, slots: Dict[str, Any], user: Optional[User], lang: str
+        self,
+        intent: str,
+        slots: Dict[str, Any],
+        user: Optional[User],
+        lang: str,
+        transcript: str = "",
     ) -> str:
         # A. WEATHER INTENT
         if intent == "weather":
@@ -216,8 +224,23 @@ class VoiceOrchestrator:
                 return "आप अपने बीज, खाद और मजदूरी के खर्चे 'Expenses' सेक्शन में जोड़ सकते हैं।"
             return "You can log your seed, fertilizer, and labour costs in the Expenses section."
 
-        # F. UNKNOWN / CLARIFYING QUESTION
+        # F. GENERAL FARMING / GEMINI AI ADVISOR / CLARIFICATION
         else:
+            if settings.GEMINI_API_KEY and transcript:
+                farm_ctx = None
+                if user:
+                    try:
+                        first_farm = self.db.query(Farm).filter(Farm.user_id == user.id).first()
+                        if first_farm:
+                            farm_ctx = f"Location: ({first_farm.latitude}, {first_farm.longitude}), Farm: {first_farm.farm_name}"
+                    except Exception:
+                        pass
+                gemini_answer = GeminiAdvisorService.ask_advisor(
+                    transcript, lang=lang, farm_context=farm_ctx
+                )
+                if gemini_answer:
+                    return gemini_answer
+
             if lang == "hi":
                 return "माफ़ कीजिए, मुझे आपकी बात पूरी समझ नहीं आई। क्या आप मौसम, मंडी भाव, फसल रोग या खर्चे के बारे में जानना चाहते हैं?"
             return "I could not fully understand your request. Would you like to check the weather, market prices, crop disease, or expenses?"

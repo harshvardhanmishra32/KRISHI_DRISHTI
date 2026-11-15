@@ -73,6 +73,10 @@ class Settings(BaseSettings):
     SPRAY_MAX_RAIN_PROBABILITY: float = 20.0 # percent
     SPRAY_MAX_TEMPERATURE: float = 35.0     # Celsius
 
+    # Gemini AI Chatbot / Advisor
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-3.1-flash-lite"
+
     # Machine Learning / Disease Detection (P13)
     TFLITE_MODEL_PATH: str = "backend/app/ml/artifacts/model.tflite"
     CLASS_NAMES_PATH: str = "backend/app/ml/artifacts/class_names.json"

@@ -33,7 +33,7 @@ export async function apiRequest(endpoint, options = {}, retries = 1) {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout for AI + TTS pipelines
 
   try {
     const response = await fetch(url, {
