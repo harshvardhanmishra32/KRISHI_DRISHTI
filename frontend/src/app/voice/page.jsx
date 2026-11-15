@@ -89,7 +89,11 @@ export default function VoicePage() {
   };
 
   const startMediaRecording = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia ||
+      typeof MediaRecorder === "undefined"
+    ) {
       setError(t("mic_error"));
       return;
     }
@@ -229,8 +233,15 @@ export default function VoicePage() {
   // Start Voice Recording
   const startRecording = async () => {
     setError(null);
+    if (
+      navigator.mediaDevices?.getUserMedia &&
+      typeof MediaRecorder !== "undefined"
+    ) {
+      await startMediaRecording();
+      return;
+    }
     if (startBrowserRecognition()) return;
-    await startMediaRecording();
+    setError(t("mic_error"));
   };
 
   // Stop Recording

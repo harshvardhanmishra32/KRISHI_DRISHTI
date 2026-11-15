@@ -359,14 +359,14 @@ export default function ScanPage() {
                       accept="image/*"
                       capture="environment"
                       onChange={handleFileChange}
-                      className="hidden"
+                      style={{ display: "none" }}
                     />
                     <input
                       ref={fileInputGalleryRef}
                       type="file"
                       accept="image/*"
                       onChange={handleFileChange}
-                      className="hidden"
+                      style={{ display: "none" }}
                     />
                   </div>
                 )}
