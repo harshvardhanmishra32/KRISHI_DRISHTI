@@ -67,9 +67,9 @@ def transcribe_audio(audio_bytes: bytes, language_hint: Optional[str] = "hi") ->
         try:
             samples = _decode_audio(audio_bytes)
             initial_prompt = (
-                "कृषि, मौसम, बारिश, तापमान, हवा, बादल, फसल, रोग, बीमारी, कीड़ा, पत्ती, मंडी भाव, खाद, मिट्टी, खर्च, टमाटर, आलू, गेहूं, धान।"
+                "नमस्ते, आज का मौसम कैसा है? क्या आज बारिश होगी? टमाटर और गेहूं का मंडी भाव क्या है? फसल में रोग, कीड़े या पीली पत्तियों की दवा बताइए।"
                 if language_hint == "hi" else
-                "Krishi Drishti, agriculture, weather, rain, temperature, crop disease, mandi prices, soil, fertilizer, expenses."
+                "Hello, how is the weather today? Will it rain? What are the mandi prices for tomato and wheat? Please advise on crop diseases, pests, and fertilizer."
             )
             segments, _ = _whisper_model.transcribe(
                 samples,

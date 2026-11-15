@@ -9,28 +9,34 @@ from typing import Dict, Any, Tuple, Optional
 # Hindi & English Intent Keywords dictionary
 INTENT_KEYWORDS = {
     "weather": [
-        "मौसम", "बारिश", "तापमान", "पानी", "हवा", "धूप", "गर्मी", "वर्षा", "आंधी", "बादल", "ठंड", "सर्दी",
-        "mausam", "mosam", "mousam", "mausum", "mosum", "barish", "barsat", "rain", "temperature",
-        "taapman", "tapman", "forecast", "weather", "humidity", "spray", "spraying", "climate",
-        "badal", "thand", "garmi", "awesome"  # Common acoustic homophone for short audio "मौसम"
+        "मौसम", "आज का मौसम", "कल का मौसम", "बारिश", "तापमान", "पानी", "हवा", "धूप", "गर्मी", "वर्षा",
+        "आंधी", "बादल", "ठंड", "सर्दी", "कोहरा", "पाला", "धुंध", "बरसात", "बरसेगा", "गिरेगा", "आसमान",
+        "ताप", "मेघ", "माटसम", "मोसम", "मासम", "मसम", "मउसम",
+        "mausam", "mosam", "mousam", "mausum", "mosum", "barish", "barsat", "pani", "rain",
+        "temperature", "taapman", "tapman", "forecast", "weather", "humidity", "spray", "spraying",
+        "climate", "badal", "thand", "garmi", "awesome", "today weather"
     ],
     "price": [
-        "भाव", "दाम", "मंडी", "रेट", "कीमत", "बिका", "बाजार", "रुपये", "रुपया",
+        "भाव", "मंडी भाव", "दाम", "मंडी", "रेट", "कीमत", "बिका", "बाजार", "रुपये", "रुपया",
+        "ठाव", "माटाव", "कटाव", "बिक्री",
         "bhav", "bhaav", "daam", "mandi", "rate", "keemat", "kimat", "price", "market",
         "cost per quintal", "selling price", "mandi bhav"
     ],
     "disease_help": [
-        "बीमारी", "रोग", "कीड़ा", "कीड़े", "पत्ती", "पत्ते", "सड़न", "धब्बा", "सूख", "कीटनाशक", "फफूंद", "इलाज", "उपचार",
-        "rog", "bimari", "beemari", "keeda", "kida", "keede", "patti", "patte", "disease", "pest", "rot", "blight",
-        "fungus", "pesticide", "spot", "yellowing", "infection", "upchar", "ilaaj", "ilaj"
+        "बीमारी", "रोग", "नोग", "कीड़ा", "कीड़े", "कीट", "पत्ती", "पत्ते", "सड़न", "धब्बा", "सूख",
+        "कीटनाशक", "फफूंद", "दवा", "इलाज", "उपचार", "झुलसा", "माहू", "सुंडी", "माहू कीट", "छिड़काव",
+        "rog", "bimari", "beemari", "keeda", "kida", "keede", "patti", "patte", "disease", "pest",
+        "rot", "blight", "fungus", "pesticide", "spot", "yellowing", "infection", "upchar", "ilaaj",
+        "ilaj", "spray"
     ],
     "soil": [
-        "मिट्टी", "खाद", "यूरिया", "उर्वरक", "पोषण", "ph", "डीएपी", "पोटाश", "गोबर",
+        "मिट्टी", "खाद", "यूरिया", "उर्वरक", "पोषण", "ph", "डीएपी", "पोटाश", "गोबर", "एनपीके", "जिंक",
+        "सल्फर", "वर्मीकंपोस्ट",
         "mitti", "khad", "khat", "urea", "dap", "potash", "soil", "fertilizer", "manure", "npk",
         "soil health", "soil test", "urvarak"
     ],
     "expenses": [
-        "खर्चा", "लागत", "खर्च", "मुनाफा", "फायदा", "मुनाफे", "हिसाब", "कमाई", "बचत",
+        "खर्चा", "लागत", "खर्च", "मुनाफा", "फायदा", "मुनाफे", "हिसाब", "कमाई", "बचत", "व्यय",
         "kharch", "kharcha", "kharche", "lagat", "munafa", "profit", "expense", "expenses",
         "revenue", "budget", "earnings", "cost", "spending", "hisab"
     ],
@@ -43,11 +49,15 @@ CROP_SYNONYMS = {
     "wheat": ["wheat", "gehun", "gehu", "गेहूं", "गेंहू"],
     "paddy": ["paddy", "rice", "dhan", "चावल", "धान"],
     "cotton": ["cotton", "kapas", "rui", "कपास"],
+    "mustard": ["mustard", "sarson", "sarso", "सरसों", "राई"],
     "chickpea": ["chickpea", "gram", "chana", "चना"],
     "sugarcane": ["sugarcane", "ganna", "गन्ना"],
     "onion": ["onion", "pyaz", "pyaaz", "kanda", "प्याज"],
     "brinjal": ["brinjal", "eggplant", "baingan", "बैंगन"],
+    "chili": ["chili", "chilli", "mirch", "mirchi", "मिर्च"],
     "cabbage": ["cabbage", "patta gobhi", "bandha gobhi", "पत्ता गोभी", "बंदगोभी"],
+    "maize": ["maize", "corn", "makka", "bhutta", "मक्का"],
+    "garlic": ["garlic", "lahsun", "lahsan", "लहसुन"],
 }
 
 # Place synonyms

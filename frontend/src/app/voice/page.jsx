@@ -225,85 +225,107 @@ export default function VoicePage() {
     }
   };
 
-  // Use the browser's speech recognition first. If its online recognition
-  // service fails, recording continues through the server-side Whisper path.
+  // Use the browser's speech recognition first (e.g. Google Cloud STT in Chrome),
+  // which provides near 100% accuracy for Hindi (hi-IN) and Indian English (en-IN).
+  // If unsupported or blocked, seamlessly falls back to server-side Whisper.
   const startBrowserRecognition = () => {
     const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+      typeof window !== "undefined"
+        ? window.SpeechRecognition || window.webkitSpeechRecognition
+        : null;
     if (!SpeechRecognition) return false;
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = activeLang === "hi" ? "hi-IN" : "en-IN";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-      setPipelineStage("listening");
-      setRecordSeconds(0);
-      timerRef.current = setInterval(() => {
-        setRecordSeconds((seconds) => {
-          if (seconds >= 29) {
-            recognition.stop();
-            return 30;
-          }
-          return seconds + 1;
-        });
-      }, 1000);
-    };
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.trim();
-      speechRecognitionRef.current = null;
-      clearRecordingTimer();
-      setIsRecording(false);
-      if (transcript) {
-        submitTextQuery(transcript);
-      } else {
-        setPipelineStage(null);
-        setError("I could not hear a question. Please try again.");
-      }
-    };
-
-    recognition.onerror = (event) => {
-      speechRecognitionRef.current = null;
-      clearRecordingTimer();
-      setIsRecording(false);
-      setPipelineStage(null);
-      if (event.error === "network" || event.error === "service-not-allowed") {
-        startMediaRecording();
-        return;
-      }
-
-      const message =
-        event.error === "not-allowed"
-          ? "Microphone permission is required for voice questions."
-          : event.error === "no-speech"
-          ? "I could not hear a question. Please try again."
-          : "Voice recognition is unavailable. Please type your question.";
-      setError(message);
-    };
-
-    recognition.onend = () => {
-      if (speechRecognitionRef.current !== recognition) return;
-      clearRecordingTimer();
-      setIsRecording(false);
-    };
-
     try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = activeLang === "hi" ? "hi-IN" : "en-IN";
+      recognition.interimResults = false;
+      recognition.continuous = false;
+      recognition.maxAlternatives = 3;
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setPipelineStage("listening");
+        setRecordSeconds(0);
+        timerRef.current = setInterval(() => {
+          setRecordSeconds((seconds) => {
+            if (seconds >= 29) {
+              recognition.stop();
+              return 30;
+            }
+            return seconds + 1;
+          });
+        }, 1000);
+      };
+
+      recognition.onresult = (event) => {
+        clearRecordingTimer();
+        setIsRecording(false);
+        speechRecognitionRef.current = null;
+        if (event.results && event.results.length > 0) {
+          const transcript = event.results[0][0].transcript.trim();
+          if (transcript) {
+            submitTextQuery(transcript);
+            return;
+          }
+        }
+        setPipelineStage(null);
+        setError(
+          activeLang === "hi"
+            ? "आवाज़ स्पष्ट सुनाई नहीं दी। कृपया दोबारा बोलें या लिखकर पूछें।"
+            : "Could not hear a question. Please speak again or type."
+        );
+      };
+
+      recognition.onerror = (event) => {
+        clearRecordingTimer();
+        setIsRecording(false);
+        speechRecognitionRef.current = null;
+        setPipelineStage(null);
+
+        // If network or service not allowed, gracefully fall back to MediaRecorder
+        if (event.error === "network" || event.error === "service-not-allowed") {
+          startMediaRecording();
+          return;
+        }
+
+        const message =
+          event.error === "not-allowed"
+            ? activeLang === "hi"
+              ? "माइक्रोफ़ोन की अनुमति चाहिए। कृपया ब्राउज़र में Mic अनुमति चालू करें।"
+              : "Microphone permission is required for voice questions."
+            : event.error === "no-speech"
+            ? activeLang === "hi"
+              ? "कोई आवाज़ नहीं सुनी गई। कृपया माइक दबाकर दोबारा बोलें।"
+              : "I could not hear any speech. Please tap the mic and speak."
+            : activeLang === "hi"
+            ? "आवाज़ पहचानने में समस्या हुई। कृपया लिखकर पूछें।"
+            : "Voice recognition is unavailable. Please type your question.";
+        setError(message);
+      };
+
+      recognition.onend = () => {
+        if (speechRecognitionRef.current !== recognition) return;
+        clearRecordingTimer();
+        setIsRecording(false);
+      };
+
       speechRecognitionRef.current = recognition;
       recognition.start();
       return true;
-    } catch {
+    } catch (e) {
+      console.warn("Browser SpeechRecognition failed to initialize:", e);
       speechRecognitionRef.current = null;
       return false;
     }
   };
 
-  // Start Voice Recording
+  // Start Voice Recording: Prioritize high-accuracy browser speech recognition,
+  // falling back to MediaRecorder + backend Whisper.
   const startRecording = async () => {
     setError(null);
+    if (startBrowserRecognition()) {
+      return;
+    }
     if (
       navigator.mediaDevices?.getUserMedia &&
       typeof MediaRecorder !== "undefined"
@@ -311,7 +333,6 @@ export default function VoicePage() {
       await startMediaRecording();
       return;
     }
-    if (startBrowserRecognition()) return;
     setError(t("mic_error"));
   };
 

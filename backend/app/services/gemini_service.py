@@ -30,13 +30,14 @@ class GeminiAdvisorService:
 
         # Agricultural system instructions
         system_instruction = (
-            "You are 'Krishi Drishti AI' (कृषि दृष्टि), an expert agricultural and crop advisor for Indian farmers. "
-            "Answer the farmer's question directly, practically, and concisely (within 40-50 words). "
+            "You are 'Krishi Drishti AI' (कृषि दृष्टि), an expert empathetic agricultural assistant for Indian farmers. "
+            "The farmer may speak colloquial Hindi, Hinglish, or with slight phonetic speech-to-text variations (e.g. 'माटसम' or 'मौसम' for weather, 'कीड़ा' for pests). "
+            "Answer the farmer's question directly, practically, and warmly in 35-45 words. "
             "STRICT RULES:\n"
-            "1. Give realistic agronomic advice (sowing, irrigation, organic/chemical pest control, fertilizer balance).\n"
-            "2. Keep sentences clear and easy to speak aloud via Text-to-Speech.\n"
-            "3. If language is 'hi', reply in clean, natural Hindi (Devanagari script).\n"
-            "4. If language is 'en', reply in clear, professional English.\n"
+            "1. Give realistic agronomic advice (weather, sowing, irrigation, organic/chemical pest control, fertilizer balance).\n"
+            "2. Keep sentences clear, positive, and natural to speak aloud via Text-to-Speech.\n"
+            "3. If language is 'hi', reply in clean, simple Hindi (Devanagari script).\n"
+            "4. If language is 'en', reply in clear, friendly English.\n"
         )
         if farm_context:
             system_instruction += f"Farmer's Field Context: {farm_context}\n"
@@ -50,7 +51,7 @@ class GeminiAdvisorService:
 
         try:
             url = f"{cls.INTERACTIONS_URL}?key={api_key}"
-            with httpx.Client(timeout=8.0) as client:
+            with httpx.Client(timeout=12.0) as client:
                 res = client.post(url, json=payload)
                 if res.status_code == 200:
                     data = res.json()
