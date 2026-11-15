@@ -71,10 +71,9 @@ export default function WeatherPage() {
       setError(null);
 
       try {
-        let endpoint = `/get-weather?lat=${selectedLocation.lat}&lon=${selectedLocation.lon}`;
-        if (selectedLocation.isFarm) {
-          endpoint = `/get-weather?farm_id=${selectedLocation.id}`;
-        }
+        const lat = selectedLocation.lat ?? 26.8467;
+        const lon = selectedLocation.lon ?? 80.9462;
+        const endpoint = `/get-weather?lat=${lat}&lon=${lon}`;
 
         const data = await api.get(endpoint);
         setWeather(data);
