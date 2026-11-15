@@ -25,6 +25,7 @@ import Card from "../../components/Card";
 import Button from "../../components/Button";
 import Chip from "../../components/Chip";
 import ErrorBox from "../../components/ErrorBox";
+import { initTTSVoices, speakBrowserText, stopAllSpeech } from "../../lib/tts";
 
 export default function ScanPage() {
   const router = useRouter();
@@ -178,15 +179,24 @@ export default function ScanPage() {
     }
   };
 
+  const speechCancelRef = useRef(null);
+
+  // Initialize TTS voices eagerly
+  useEffect(() => {
+    initTTSVoices();
+    return () => {
+      stopAllSpeech();
+    };
+  }, []);
+
   const handleReset = () => {
     setImageFile(null);
     setImagePreviewUrl(null);
     setResult(null);
     setError(null);
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-    }
+    if (speechCancelRef.current) speechCancelRef.current();
+    stopAllSpeech();
+    setIsSpeaking(false);
   };
 
   // Text-To-Speech for diagnosis advice
@@ -198,7 +208,8 @@ export default function ScanPage() {
     }
 
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
+      if (speechCancelRef.current) speechCancelRef.current();
+      stopAllSpeech();
       setIsSpeaking(false);
       return;
     }
@@ -232,14 +243,13 @@ export default function ScanPage() {
       }
     }
 
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = language === "hi" ? "hi-IN" : "en-IN";
-    utterance.rate = 0.95;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    window.speechSynthesis.speak(utterance);
+    stopAllSpeech();
     setIsSpeaking(true);
+    speechCancelRef.current = speakBrowserText(textToSpeak, language, {
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
   };
 
   return (

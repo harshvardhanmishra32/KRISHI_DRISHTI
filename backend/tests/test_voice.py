@@ -56,3 +56,17 @@ def test_voice_query_unknown_intent_clarification(client):
     data = res.json()
     assert data["intent"] == "unknown"
     assert "मौसम" in data["answer_text"] or "मंडी भाव" in data["answer_text"]
+
+
+def test_voice_query_generates_tts(client):
+    """POST /voice-query should generate audio_url (MP3/WAV) for speech playback."""
+    payload = {
+        "query_text": "आज मौसम कैसा है?",
+        "language": "hi",
+    }
+    res = client.post("/voice-query", data=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["intent"] == "weather"
+    assert data["audio_url"] is not None
+    assert data["audio_url"].startswith("/uploads/tts/")

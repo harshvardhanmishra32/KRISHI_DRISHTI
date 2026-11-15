@@ -223,6 +223,7 @@ class VoiceOrchestrator:
             return "I could not fully understand your request. Would you like to check the weather, market prices, crop disease, or expenses?"
 
     def _generate_tts(self, text: str, lang: str) -> Optional[str]:
+        # 1. Primary TTS: Google TTS (gTTS) - produces natural mp3
         try:
             import importlib
             gtts_mod = importlib.import_module("gtts")
@@ -232,6 +233,31 @@ class VoiceOrchestrator:
             tts = gTTS(text=text, lang="hi" if lang == "hi" else "en", slow=False)
             tts.save(str(tts_path))
             return f"/uploads/tts/{tts_filename}"
-        except Exception:
-            # Graceful degradation: return text only if TTS is unavailable or offline
-            return None
+        except Exception as e:
+            logger.warning(f"gTTS online generation failed: {e}. Attempting local offline fallback...")
+
+        # 2. Secondary TTS: macOS native offline 'say' & 'afconvert'
+        try:
+            import shutil
+            import subprocess
+            if shutil.which("say") and shutil.which("afconvert"):
+                tts_filename = f"{uuid.uuid4().hex}.wav"
+                tts_path = self.tts_dir / tts_filename
+                temp_aiff = self.tts_dir / f"temp_{uuid.uuid4().hex}.aiff"
+                
+                # Check for Lekha (macOS Hindi voice) if lang is Hindi
+                voice_cmd = ["say"]
+                if lang == "hi":
+                    voice_cmd.extend(["-v", "Lekha"])
+                voice_cmd.extend(["-o", str(temp_aiff), text])
+                
+                subprocess.run(voice_cmd, check=True, timeout=10)
+                subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16", str(temp_aiff), str(tts_path)], check=True, timeout=10)
+                if temp_aiff.exists():
+                    temp_aiff.unlink()
+                return f"/uploads/tts/{tts_filename}"
+        except Exception as e:
+            logger.warning(f"Local offline TTS fallback failed: {e}")
+
+        # 3. Graceful degradation: return None so browser can attempt client-side synthesis
+        return None

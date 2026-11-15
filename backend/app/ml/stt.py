@@ -49,24 +49,39 @@ def load_stt_model(model_size: str = "tiny"):
 def transcribe_audio(audio_bytes: bytes, language_hint: Optional[str] = "hi") -> Optional[str]:
     """
     Transcribes audio bytes to text.
-    If STT model is loaded and functional, runs inference.
+    If STT model is loaded and functional, runs inference with agricultural Hindi prior context.
     Returns None if transcription could not be performed.
     """
     global _whisper_model
 
+    if len(audio_bytes) == 0:
+        return None
+
+    if _whisper_model is None:
+        try:
+            load_stt_model(model_size="tiny")
+        except Exception as e:
+            logger.warning(f"Lazy STT model loading failed: {e}")
+
     if _whisper_model is not None:
         try:
             samples = _decode_audio(audio_bytes)
-            segments, _ = _whisper_model.transcribe(samples, language=language_hint)
+            initial_prompt = (
+                "कृषि, मौसम, बारिश, तापमान, हवा, बादल, फसल, रोग, बीमारी, कीड़ा, पत्ती, मंडी भाव, खाद, मिट्टी, खर्च, टमाटर, आलू, गेहूं, धान।"
+                if language_hint == "hi" else
+                "Krishi Drishti, agriculture, weather, rain, temperature, crop disease, mandi prices, soil, fertilizer, expenses."
+            )
+            segments, _ = _whisper_model.transcribe(
+                samples,
+                language=language_hint or "hi",
+                initial_prompt=initial_prompt,
+                vad_filter=True,
+                beam_size=5,
+            )
             transcript = " ".join([seg.text for seg in segments]).strip()
             return transcript if transcript else None
         except Exception as e:
             logger.warning(f"Whisper inference error: {e}")
             return None
 
-    # Fallback: check if audio is empty
-    if len(audio_bytes) == 0:
-        return None
-
-    # Graceful message when STT engine is not loaded
     return None

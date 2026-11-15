@@ -22,6 +22,11 @@ import Header from "../../components/Header";
 import Card from "../../components/Card";
 import Chip from "../../components/Chip";
 import ErrorBox from "../../components/ErrorBox";
+import {
+  initTTSVoices,
+  playServerOrBrowserAudio,
+  stopAllSpeech,
+} from "../../lib/tts";
 
 export default function VoicePage() {
   const { user } = useAuth();
@@ -44,21 +49,50 @@ export default function VoicePage() {
     },
   ]);
   const [error, setError] = useState(null);
+  const [playingMessageId, setPlayingMessageId] = useState(null);
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const speechRecognitionRef = useRef(null);
   const timerRef = useRef(null);
   const audioPlayerRef = useRef(null);
+  const speechCancelRef = useRef(null);
+
+  // Initialize TTS voices eagerly on mount
+  useEffect(() => {
+    initTTSVoices();
+    return () => {
+      stopAllSpeech(audioPlayerRef);
+    };
+  }, []);
 
   // Sync language with context
   useEffect(() => {
-    if (language) setActiveLang(language);
+    if (language) {
+      setActiveLang(language);
+    }
   }, [language]);
 
   const handleLanguageToggle = (lang) => {
     setActiveLang(lang);
     changeLanguage(lang);
+    // If only welcome message is present, update its text
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].id === "welcome") {
+        return [
+          {
+            id: "welcome",
+            sender: "bot",
+            text:
+              lang === "hi"
+                ? "नमस्ते! मैं कृषि दृष्टि आवाज़ सहायक हूँ। आप मुझसे मौसम, मंडी भाव, पत्तियों के रोग या खाद-बीज के बारे में बोलकर पूछ सकते हैं।"
+                : "Namaste! I am your Krishi Drishti Voice Assistant. Ask me about weather, crop diseases, mandi prices, or farming advice.",
+            intent: "greeting",
+          },
+        ];
+      }
+      return prev;
+    });
   };
 
   const clearRecordingTimer = () => {
@@ -66,6 +100,43 @@ export default function VoicePage() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+  };
+
+  const playMessageSpeech = (msg) => {
+    if (playingMessageId === msg.id) {
+      if (speechCancelRef.current) speechCancelRef.current();
+      stopAllSpeech(audioPlayerRef);
+      setPlayingMessageId(null);
+      setPipelineStage(null);
+      return;
+    }
+
+    if (speechCancelRef.current) speechCancelRef.current();
+    stopAllSpeech(audioPlayerRef);
+
+    setPlayingMessageId(msg.id);
+    setPipelineStage("speaking");
+
+    speechCancelRef.current = playServerOrBrowserAudio(
+      msg.audioUrl,
+      msg.text,
+      activeLang,
+      audioPlayerRef,
+      {
+        onStart: () => {
+          setPipelineStage("speaking");
+          setPlayingMessageId(msg.id);
+        },
+        onEnd: () => {
+          setPipelineStage(null);
+          setPlayingMessageId(null);
+        },
+        onError: () => {
+          setPipelineStage(null);
+          setPlayingMessageId(null);
+        },
+      }
+    );
   };
 
   const submitTextQuery = async (query) => {
@@ -307,28 +378,8 @@ export default function VoicePage() {
 
     setMessages((prev) => [...prev, botMsg]);
 
-    // If audio_url is returned, auto-play it
-    if (res.audio_url) {
-      const fullUrl = res.audio_url.startsWith("http")
-        ? res.audio_url
-        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"}${res.audio_url}`;
-
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.src = fullUrl;
-        audioPlayerRef.current.play().catch((e) => {
-          console.warn("Audio autoplay blocked by browser:", e);
-        });
-      }
-    } else if (typeof window !== "undefined" && window.speechSynthesis) {
-      // Browser SpeechSynthesis fallback
-      const utterance = new SpeechSynthesisUtterance(res.answer_text);
-      utterance.lang = activeLang === "hi" ? "hi-IN" : "en-IN";
-      window.speechSynthesis.speak(utterance);
-    }
-
-    setTimeout(() => {
-      setPipelineStage(null);
-    }, 3000);
+    // Automatically speak/play the response
+    playMessageSpeech(botMsg);
   };
 
   return (
@@ -464,6 +515,37 @@ export default function VoicePage() {
                       </span>
                     )}
                     <p>{msg.text}</p>
+                    {msg.sender === "bot" && (
+                      <div className="mt-2.5 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => playMessageSpeech(msg)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                            playingMessageId === msg.id
+                              ? "bg-krishi-green text-white shadow-xs animate-pulse"
+                              : "bg-slate-100 text-krishi-grey hover:bg-emerald-50 hover:text-krishi-green"
+                          }`}
+                          aria-label="Listen to message"
+                        >
+                          {playingMessageId === msg.id ? (
+                            <>
+                              <VolumeX className="w-3.5 h-3.5 text-white" />
+                              <span>{activeLang === "hi" ? "रुकें" : "Stop"}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-3.5 h-3.5 text-krishi-green" />
+                              <span>{activeLang === "hi" ? "आवाज़ सुनें" : "Listen"}</span>
+                            </>
+                          )}
+                        </button>
+                        {msg.audioUrl && (
+                          <span className="text-[10px] text-krishi-green font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">
+                            HQ Voice
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {msg.sender === "user" && (

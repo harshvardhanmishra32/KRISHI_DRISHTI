@@ -9,29 +9,30 @@ from typing import Dict, Any, Tuple, Optional
 # Hindi & English Intent Keywords dictionary
 INTENT_KEYWORDS = {
     "weather": [
-        "मौसम", "बारिश", "तापमान", "पानी", "हवा", "धूप", "गर्मी", "वर्षा", "आंधी",
-        "mausam", "barish", "barsat", "rain", "temperature", "forecast", "weather",
-        "humidity", "spray", "spraying", "climate"
+        "मौसम", "बारिश", "तापमान", "पानी", "हवा", "धूप", "गर्मी", "वर्षा", "आंधी", "बादल", "ठंड", "सर्दी",
+        "mausam", "mosam", "mousam", "mausum", "mosum", "barish", "barsat", "rain", "temperature",
+        "taapman", "tapman", "forecast", "weather", "humidity", "spray", "spraying", "climate",
+        "badal", "thand", "garmi", "awesome"  # Common acoustic homophone for short audio "मौसम"
     ],
     "price": [
-        "भाव", "दाम", "मंडी", "रेट", "कीमत", "बिका", "बाजार",
-        "bhav", "daam", "mandi", "rate", "keemat", "price", "market",
-        "cost per quintal", "selling price"
+        "भाव", "दाम", "मंडी", "रेट", "कीमत", "बिका", "बाजार", "रुपये", "रुपया",
+        "bhav", "bhaav", "daam", "mandi", "rate", "keemat", "kimat", "price", "market",
+        "cost per quintal", "selling price", "mandi bhav"
     ],
     "disease_help": [
-        "बीमारी", "रोग", "कीड़ा", "पत्ती", "सड़न", "धब्बा", "सूख", "कीटनाशक", "फफूंद",
-        "rog", "bimari", "keeda", "patti", "disease", "pest", "rot", "blight",
-        "fungus", "pesticide", "spot", "yellowing", "infection"
+        "बीमारी", "रोग", "कीड़ा", "कीड़े", "पत्ती", "पत्ते", "सड़न", "धब्बा", "सूख", "कीटनाशक", "फफूंद", "इलाज", "उपचार",
+        "rog", "bimari", "beemari", "keeda", "kida", "keede", "patti", "patte", "disease", "pest", "rot", "blight",
+        "fungus", "pesticide", "spot", "yellowing", "infection", "upchar", "ilaaj", "ilaj"
     ],
     "soil": [
-        "मिट्टी", "खाद", "यूरिया", "उर्वरक", "पोषण", "ph", "डीएपी",
-        "mitti", "khat", "urea", "dap", "soil", "fertilizer", "manure", "npk",
-        "soil health", "soil test"
+        "मिट्टी", "खाद", "यूरिया", "उर्वरक", "पोषण", "ph", "डीएपी", "पोटाश", "गोबर",
+        "mitti", "khad", "khat", "urea", "dap", "potash", "soil", "fertilizer", "manure", "npk",
+        "soil health", "soil test", "urvarak"
     ],
     "expenses": [
-        "खर्चा", "लागत", "खर्च", "मुनाफा", "फायदा", "मुनाफे", "हिसाब", "कमाई",
-        "kharch", "kharcha", "lagat", "munafa", "profit", "expense", "revenue",
-        "budget", "earnings", "cost", "spending"
+        "खर्चा", "लागत", "खर्च", "मुनाफा", "फायदा", "मुनाफे", "हिसाब", "कमाई", "बचत",
+        "kharch", "kharcha", "kharche", "lagat", "munafa", "profit", "expense", "expenses",
+        "revenue", "budget", "earnings", "cost", "spending", "hisab"
     ],
 }
 
@@ -95,15 +96,22 @@ class NluEngine:
             "place": detected_place,
         }
 
-        # 3. Intent Classification by Keyword Scoring
+        # 3. Intent Classification by Keyword Scoring & Normalization
+        clean_text = re.sub(r"[^\w\s\u0900-\u097F]", " ", text_lower).strip()
+        tokens = set(clean_text.split())
+
         best_intent = "unknown"
         max_score = 0
 
         for intent, kw_list in INTENT_KEYWORDS.items():
             score = 0
             for kw in kw_list:
-                # Count occurrences or exact word matches
-                if re.search(rf"\b{re.escape(kw.lower())}\b", text_lower) or kw.lower() in text_lower:
+                kw_lower = kw.lower()
+                # Exact single word token match gets strong weight (+3)
+                if kw_lower in tokens:
+                    score += 3
+                # Substring or phrase match
+                elif re.search(rf"\b{re.escape(kw_lower)}\b", clean_text) or kw_lower in clean_text:
                     score += 1
             if score > max_score:
                 max_score = score

@@ -7,11 +7,29 @@
   color-scheme: light;
 }
 
-body {
+html, body {
   font-family: var(--font-sans);
-  background-color: #F3F4F6;
-  color: #1F2937;
+  background-color: #F3F4F6 !important;
+  color: #1F2937 !important;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Force explicit light background and dark text on all form controls across Chrome */
+input, select, textarea {
+  background-color: #FFFFFF !important;
+  color: #1F2937 !important;
+  border-color: #D1D5DB !important;
+}
+
+select option {
+  background-color: #FFFFFF !important;
+  color: #1F2937 !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #2E7D32 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2) !important;
 }
 
 /* Custom light scrollbar */

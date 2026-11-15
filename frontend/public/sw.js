@@ -3,7 +3,7 @@
  * Offline caching for Indian farmers operating under intermittent 2G/3G connectivity.
  */
 
-const CACHE_NAME = "krishi-drishti-v1";
+const CACHE_NAME = "krishi-drishti-v3-light";
 const OFFLINE_URL = "/";
 
 const STATIC_ASSETS = [
@@ -23,14 +23,17 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// 2. Activate Event: Clean old caches
+// 2. Activate Event: Clean ALL old caches immediately
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log("Removing old cache:", key);
+            return caches.delete(key);
+          }
+        })
       );
     })
   );
@@ -44,6 +47,12 @@ self.addEventListener("fetch", (event) => {
 
   // Ignore non-HTTP/HTTPS or chrome extension requests
   if (!url.protocol.startsWith("http")) return;
+
+  // On localhost, bypass cache entirely so development is never cached
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Stale-While-Revalidate for Weather and Market Price API requests
   if (url.pathname.includes("/get-weather") || url.pathname.includes("/get-market-price")) {
@@ -85,24 +94,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-First for static assets (scripts, styles, images)
+  // Network-First for HTML navigation
+  if (request.headers.get("accept")?.includes("text/html")) {
+    event.respondWith(
+      fetch(request).catch(() => caches.match(OFFLINE_URL))
+    );
+    return;
+  }
+
+  // Cache-First for static image assets
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-      return fetch(request)
-        .then((response) => {
-          if (response.ok && request.method === "GET") {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => {
-          // If HTML navigation failed, return offline fallback
-          if (request.headers.get("accept")?.includes("text/html")) {
-            return caches.match(OFFLINE_URL);
-          }
-        });
+      return fetch(request).then((response) => {
+        if (response.ok && request.method === "GET") {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      });
     })
   );
 });
