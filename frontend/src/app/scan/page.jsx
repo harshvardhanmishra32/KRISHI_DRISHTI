@@ -340,25 +340,25 @@ export default function ScanPage() {
                       </p>
                     </div>
 
-                    <div className="flex gap-2 justify-center pt-2">
+                    <div className="flex flex-col sm:flex-row gap-2.5 justify-center pt-2 max-w-xs mx-auto">
                       {/* Native camera trigger */}
                       <button
                         type="button"
                         onClick={() => fileInputCameraRef.current?.click()}
-                        className="px-4 py-2.5 bg-krishi-green text-white text-xs font-bold rounded-button shadow-sm flex items-center gap-1.5 hover:bg-krishi-dark active:scale-95 transition-all"
+                        className="flex-1 py-3 px-4 bg-krishi-green text-white text-xs font-bold rounded-button shadow-sm flex items-center justify-center gap-2 hover:bg-krishi-dark active:scale-95 transition-all cursor-pointer"
                       >
-                        <Camera className="w-4 h-4" />
-                        {t("take_photo")}
+                        <Camera className="w-4 h-4 stroke-[2.2]" />
+                        <span>{t("take_photo")}</span>
                       </button>
 
                       {/* Gallery trigger */}
                       <button
                         type="button"
                         onClick={() => fileInputGalleryRef.current?.click()}
-                        className="px-4 py-2.5 bg-white border border-krishi-border text-krishi-text text-xs font-bold rounded-button shadow-xs flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition-all"
+                        className="flex-1 py-3 px-4 bg-white border border-krishi-border text-slate-800 text-xs font-bold rounded-button shadow-xs flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
                       >
-                        <ImageIcon className="w-4 h-4 text-krishi-grey" />
-                        {t("upload_gallery")}
+                        <ImageIcon className="w-4 h-4 text-krishi-green stroke-[2.2]" />
+                        <span>{t("upload_gallery")}</span>
                       </button>
                     </div>
 

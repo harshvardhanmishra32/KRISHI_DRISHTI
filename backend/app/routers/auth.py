@@ -116,6 +116,62 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     )
 
 
+@router.post(
+    "/demo-login",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="One-click demo login for instant farmer testing"
+)
+def demo_login(db: Session = Depends(get_db)):
+    """
+    Instantly provisions or fetches a verified demo farmer (Farmer Ram)
+    with a sample farm in Uttar Pradesh, returning a valid JWT session.
+    """
+    demo_phone = "9876543210"
+    user = db.query(User).filter(User.phone == demo_phone).first()
+    if not user:
+        from app.core.security import hash_password
+        user = User(
+            name="Farmer Ram",
+            phone=demo_phone,
+            email="farmer.ram@krishi.in",
+            password_hash=hash_password("Farmer@123"),
+            preferred_language="hi",
+            role=UserRole.FARMER
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    from app.models.farm import Farm
+    existing_farm = db.query(Farm).filter(Farm.user_id == user.id).first()
+    if not existing_farm:
+        from geoalchemy2.elements import WKTElement
+        demo_farm = Farm(
+            user_id=user.id,
+            farm_name="Ram Kisan Farm",
+            latitude=26.8467,
+            longitude=80.9462,
+            location=WKTElement("POINT(80.9462 26.8467)", srid=4326),
+            area_acres=3.5,
+            state="Uttar Pradesh",
+            district="Lucknow"
+        )
+        db.add(demo_farm)
+        db.commit()
+
+    role_val = user.role.value if hasattr(user.role, "value") else str(user.role)
+    token = create_access_token(
+        subject=str(user.id),
+        extra_claims={"role": role_val, "name": user.name}
+    )
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user)
+    )
+
+
 @router.get(
     "/me",
     response_model=UserResponse,

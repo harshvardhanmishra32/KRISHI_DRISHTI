@@ -17,7 +17,7 @@ function LoginForm() {
   const redirectPath = searchParams.get("redirect") || "/dashboard";
   const initialPhone = searchParams.get("phone") || "";
 
-  const { login } = useAuth();
+  const { login, demoLogin } = useAuth();
   const { t } = useLanguage();
 
   const [phone, setPhone] = useState(initialPhone);
@@ -31,6 +31,20 @@ function LoginForm() {
     else if (cleaned.startsWith("91") && cleaned.length === 12) cleaned = cleaned.slice(2);
     else if (cleaned.startsWith("0") && cleaned.length === 11) cleaned = cleaned.slice(1);
     return cleaned.replace(/\D/g, "");
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await demoLogin();
+      window.location.href = redirectPath;
+    } catch (err) {
+      console.error("Demo login failed:", err);
+      setError(err.message || "Failed to start demo session. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -76,6 +90,24 @@ function LoginForm() {
             <ErrorBox error={error} onDismiss={() => setError(null)} />
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={loading}
+          className="w-full py-3 px-4 bg-emerald-50 hover:bg-emerald-100 border border-krishi-green/40 text-krishi-dark font-bold text-xs rounded-button flex items-center justify-center gap-2 transition-all shadow-xs active:scale-95 mb-4"
+        >
+          <Sprout className="w-4 h-4 text-krishi-green" />
+          <span>🌾 Quick Demo Login (एक क्लिक में डेमो चलाएं)</span>
+        </button>
+
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-[11px] font-bold text-krishi-grey uppercase tracking-wider">
+            or log in with password
+          </span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

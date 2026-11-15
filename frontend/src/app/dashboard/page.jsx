@@ -66,33 +66,33 @@ export default function DashboardPage() {
 
   // Fetch weather when selectedFarm changes
   useEffect(() => {
-    if (!selectedFarm) {
-      setWeather(null);
-      return;
-    }
-
     const fetchWeather = async () => {
       setLoadingWeather(true);
       try {
-        const res = await api.get(`/get-weather?farm_id=${selectedFarm.id}`);
-        setWeather(res);
-      } catch (e) {
-        console.warn("Could not fetch weather for farm, falling back to coords:", e);
-        try {
-          const res = await api.get(
-            `/get-weather?lat=${selectedFarm.latitude}&lon=${selectedFarm.longitude}`
-          );
+        if (selectedFarm) {
+          try {
+            const res = await api.get(`/get-weather?farm_id=${selectedFarm.id}`);
+            setWeather(res);
+          } catch (e) {
+            const res = await api.get(
+              `/get-weather?lat=${selectedFarm.latitude}&lon=${selectedFarm.longitude}`
+            );
+            setWeather(res);
+          }
+        } else if (!loadingFarms) {
+          // Regional default weather (Lucknow, UP / North Central India)
+          const res = await api.get("/get-weather?lat=26.8467&lon=80.9462");
           setWeather(res);
-        } catch (err) {
-          console.error("Failed weather fallback:", err);
         }
+      } catch (err) {
+        console.error("Weather fetch fallback failed:", err);
       } finally {
         setLoadingWeather(false);
       }
     };
 
     fetchWeather();
-  }, [selectedFarm]);
+  }, [selectedFarm, loadingFarms]);
 
   // Fetch recent scan activity
   useEffect(() => {

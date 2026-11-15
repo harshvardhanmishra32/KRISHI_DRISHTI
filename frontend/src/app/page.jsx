@@ -10,7 +10,7 @@ import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function LandingPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, demoLogin } = useAuth();
   const { t } = useLanguage();
 
   const handleScanClick = () => {
@@ -69,12 +69,30 @@ export default function LandingPage() {
               {t("nav_home")}
             </Button>
           ) : (
-            <Button
-              variant="outline"
-              onClick={() => router.push("/login")}
-            >
-              {t("login")} / {t("signup")}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/login")}
+                className="w-full"
+              >
+                {t("login")} / {t("signup")}
+              </Button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await demoLogin();
+                    router.push("/dashboard");
+                  } catch (e) {
+                    router.push("/login");
+                  }
+                }}
+                className="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100/80 border border-krishi-green/40 text-krishi-dark font-bold text-xs rounded-button flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
+              >
+                <Sprout className="w-3.5 h-3.5 text-krishi-green" />
+                <span>🌾 Explore Demo (डेमो देखें)</span>
+              </button>
+            </div>
           )}
         </div>
 

@@ -28,7 +28,7 @@ export default function Header({
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="text-base font-bold text-krishi-text tracking-tight truncate">
+        <h1 className="text-base font-extrabold text-slate-900 tracking-tight truncate">
           {title}
         </h1>
       </div>
