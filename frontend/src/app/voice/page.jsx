@@ -88,8 +88,70 @@ export default function VoicePage() {
     }
   };
 
-  // Use the browser's speech recognition first. It works without the optional
-  // server-side Whisper package and returns the transcript before calling the API.
+  const startMediaRecording = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError(t("mic_error"));
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+
+      let mimeType = "audio/webm";
+      if (!MediaRecorder.isTypeSupported("audio/webm")) {
+        if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          mimeType = "audio/mp4";
+        } else {
+          mimeType = "";
+        }
+      }
+
+      const mediaRecorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: mediaRecorder.mimeType || "audio/webm",
+        });
+        stream.getTracks().forEach((track) => track.stop());
+        await processAudioQuery(audioBlob);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setError(null);
+      setIsRecording(true);
+      setPipelineStage("listening");
+      setRecordSeconds(0);
+
+      timerRef.current = setInterval(() => {
+        setRecordSeconds((sec) => {
+          if (sec >= 29) {
+            mediaRecorder.stop();
+            clearRecordingTimer();
+            return 30;
+          }
+          return sec + 1;
+        });
+      }, 1000);
+    } catch (err) {
+      console.error("Microphone access error:", err);
+      setError("Microphone permission denied or not supported.");
+      setIsRecording(false);
+      setPipelineStage(null);
+    }
+  };
+
+  // Use the browser's speech recognition first. If its online recognition
+  // service fails, recording continues through the server-side Whisper path.
   const startBrowserRecognition = () => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -134,6 +196,11 @@ export default function VoicePage() {
       clearRecordingTimer();
       setIsRecording(false);
       setPipelineStage(null);
+      if (event.error === "network" || event.error === "service-not-allowed") {
+        startMediaRecording();
+        return;
+      }
+
       const message =
         event.error === "not-allowed"
           ? "Microphone permission is required for voice questions."
@@ -144,6 +211,7 @@ export default function VoicePage() {
     };
 
     recognition.onend = () => {
+      if (speechRecognitionRef.current !== recognition) return;
       clearRecordingTimer();
       setIsRecording(false);
     };
@@ -162,65 +230,7 @@ export default function VoicePage() {
   const startRecording = async () => {
     setError(null);
     if (startBrowserRecognition()) return;
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setError(t("mic_error"));
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunksRef.current = [];
-
-      let mimeType = "audio/webm";
-      if (!MediaRecorder.isTypeSupported("audio/webm")) {
-        if (MediaRecorder.isTypeSupported("audio/mp4")) {
-          mimeType = "audio/mp4";
-        } else {
-          mimeType = "";
-        }
-      }
-
-      const mediaRecorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: mediaRecorder.mimeType || "audio/webm",
-        });
-        stream.getTracks().forEach((track) => track.stop());
-        await processAudioQuery(audioBlob);
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-      setIsRecording(true);
-      setPipelineStage("listening");
-      setRecordSeconds(0);
-
-      timerRef.current = setInterval(() => {
-        setRecordSeconds((sec) => {
-          if (sec >= 29) {
-            mediaRecorder.stop();
-            clearRecordingTimer();
-            return 30;
-          }
-          return sec + 1;
-        });
-      }, 1000);
-    } catch (err) {
-      console.error("Microphone access error:", err);
-      setError("Microphone permission denied or not supported.");
-      setIsRecording(false);
-      setPipelineStage(null);
-    }
+    await startMediaRecording();
   };
 
   // Stop Recording
