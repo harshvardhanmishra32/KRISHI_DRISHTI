@@ -4,24 +4,20 @@ Uses scikit-learn DBSCAN with Haversine distance metric to cluster disease repor
 spatially and temporally while preserving farmer privacy.
 """
 
+import datetime
 import math
 import time
-import uuid
-import datetime
-import numpy as np
-from typing import List, Dict, Any, Tuple, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from sklearn.cluster import DBSCAN
-from geoalchemy2.elements import WKTElement
 
-from app.core.config import settings
-from app.core.logging import logger
-from app.models.user import User, UserRole
+import numpy as np
+from geoalchemy2.elements import WKTElement
+from sklearn.cluster import DBSCAN
+from sqlalchemy.orm import Session
+
 from app.models.crop import Disease
 from app.models.farm import Farm
+from app.models.outbreak import AlertLevel, AlertStatus, OutbreakAlert
 from app.models.report import DiseaseReport
-from app.models.outbreak import OutbreakAlert, AlertLevel, AlertStatus
+from app.models.user import User, UserRole
 from app.schemas.outbreak import OutbreakAlertResponse, OutbreakCheckResponse
 
 EARTH_RADIUS_KM = 6371.0088
@@ -52,7 +48,7 @@ class OutbreakService:
         min_distinct_farmers: int = 3,
     ) -> OutbreakCheckResponse:
         t0 = time.perf_counter()
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
         window_start = now - datetime.timedelta(days=days)
 
         # 1. Fetch all non-healthy diseases
@@ -96,7 +92,7 @@ class OutbreakService:
                 cluster_reports = [reports[i] for i in cluster_indices]
 
                 # Check distinct farmer threshold (min 3 to prevent single-farm false alert)
-                distinct_users = set(r.user_id for r in cluster_reports)
+                distinct_users = {r.user_id for r in cluster_reports}
                 if len(distinct_users) < min_distinct_farmers:
                     continue
 
@@ -168,14 +164,10 @@ class OutbreakService:
 
         # 3. Mark old active alerts resolved if no longer clustering
         resolved_count = 0
-        old_alerts = (
-            self.db.query(OutbreakAlert)
-            .filter(
-                OutbreakAlert.status == AlertStatus.ACTIVE,
-                ~OutbreakAlert.id.in_(active_alert_ids) if active_alert_ids else True,
-            )
-            .all()
-        )
+        query_old = self.db.query(OutbreakAlert).filter(OutbreakAlert.status == AlertStatus.ACTIVE)
+        if active_alert_ids:
+            query_old = query_old.filter(~OutbreakAlert.id.in_(active_alert_ids))
+        old_alerts = query_old.all()
         for oa in old_alerts:
             oa.status = AlertStatus.RESOLVED
             resolved_count += 1
@@ -194,10 +186,10 @@ class OutbreakService:
     def list_outbreaks(
         self,
         current_user: User,
-        state: Optional[str] = None,
-        district: Optional[str] = None,
+        state: str | None = None,
+        district: str | None = None,
         active_only: bool = True,
-    ) -> List[OutbreakAlertResponse]:
+    ) -> list[OutbreakAlertResponse]:
         query = self.db.query(OutbreakAlert)
         if active_only:
             query = query.filter(OutbreakAlert.status == AlertStatus.ACTIVE)
@@ -214,7 +206,7 @@ class OutbreakService:
         if not is_officer:
             user_farms = self.db.query(Farm).filter(Farm.user_id == current_user.id).all()
 
-        results: List[OutbreakAlertResponse] = []
+        results: list[OutbreakAlertResponse] = []
         for a in alerts:
             # Centroid coordinates extraction
             # Default fallback coordinates

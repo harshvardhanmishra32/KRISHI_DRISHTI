@@ -1,11 +1,17 @@
-import uuid
 import datetime
 import enum
-from sqlalchemy import String, Integer, Boolean, DateTime, ForeignKey, Enum
+import uuid
+from typing import TYPE_CHECKING
+
+from geoalchemy2 import Geography
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from geoalchemy2 import Geography
+
 from app.db.session import Base
+
+if TYPE_CHECKING:
+    from app.models.crop import Disease
 
 
 class AlertLevel(str, enum.Enum):
@@ -55,7 +61,7 @@ class OutbreakAlert(Base):
     is_simulated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+        default=lambda: datetime.datetime.now(datetime.UTC),
         nullable=False
     )
 
