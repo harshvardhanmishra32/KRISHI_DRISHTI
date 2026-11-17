@@ -1,5 +1,6 @@
 import datetime
 import enum
+from typing import TYPE_CHECKING
 import uuid
 from typing import TYPE_CHECKING
 

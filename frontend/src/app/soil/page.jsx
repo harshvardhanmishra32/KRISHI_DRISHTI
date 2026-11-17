@@ -369,6 +369,25 @@ export default function SoilPage() {
                     </div>
                   </div>
 
+                  {/* NPK Fertilizer Dose Guidance */}
+                  {item.typical_npk && (
+                    <div className="mt-2 p-2.5 bg-emerald-50/70 rounded-lg border border-krishi-green/20 space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-krishi-text">
+                          Recommended N:P:K Dose:
+                        </span>
+                        <span className="font-mono font-bold text-krishi-green px-1.5 py-0.5 bg-white rounded border border-krishi-green/30">
+                          {item.typical_npk} kg/ha
+                        </span>
+                      </div>
+                      {item.fertilizer_guidance && (
+                        <p className="text-[11px] text-krishi-grey leading-relaxed">
+                          {item.fertilizer_guidance}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Reasons */}
                   {item.reasons && item.reasons.length > 0 && (
                     <div className="space-y-1 pt-1">
@@ -409,23 +428,38 @@ export default function SoilPage() {
             </div>
           )}
 
-          {/* Government Soil Testing Lab Portal Link */}
-          <Card className="bg-slate-50 border-krishi-border text-center p-4">
-            <h4 className="text-xs font-bold text-krishi-text mb-1">
-              Need an official Soil Health Card?
-            </h4>
-            <p className="text-[11px] text-krishi-grey mb-3">
-              Government of India Soil Health Card scheme offers subsidized testing.
-            </p>
-            <a
-              href="https://soilhealth.dac.gov.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white border border-krishi-border rounded-button text-xs font-bold text-krishi-green shadow-xs hover:bg-slate-100 transition-colors"
-            >
-              <span>{t("find_lab")}</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+          {/* Government Soil Health Card & Testing Lab Portal Links */}
+          <Card className="bg-slate-50 border-krishi-border p-4 space-y-3">
+            <div className="text-center">
+              <h4 className="text-xs font-bold text-krishi-text">
+                Government of India Soil Health Services
+              </h4>
+              <p className="text-[11px] text-krishi-grey mt-0.5">
+                Get subsidized official testing, print certified Soil Health Cards, and find your nearest district laboratory.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <a
+                href="https://soilhealth.dac.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white border border-krishi-border rounded-button text-xs font-bold text-krishi-green shadow-xs hover:bg-emerald-50 transition-colors"
+              >
+                <span>Soil Health Card Portal</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
+              <a
+                href="https://soilhealth.dac.gov.in/soil-testing-lab"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white border border-krishi-border rounded-button text-xs font-bold text-krishi-text shadow-xs hover:bg-slate-100 transition-colors"
+              >
+                <span>Nearest Testing Lab</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </Card>
         </div>
 

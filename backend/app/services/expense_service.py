@@ -99,7 +99,7 @@ class ExpenseService:
         if end_date:
             query = query.filter(Expense.expense_date <= end_date)
 
-        return query.order_by(desc(Expense.expense_date)).all()
+        return query.order_by(Expense.expense_date.desc()).all()
 
     def get_expense(self, user: User, expense_id: uuid.UUID) -> Expense:
         expense = self.db.query(Expense).filter(Expense.id == expense_id, Expense.user_id == user.id).first()

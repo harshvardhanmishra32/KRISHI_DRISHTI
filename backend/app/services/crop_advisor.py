@@ -4,6 +4,7 @@ Provides RuleBasedAdvisor and ML-based recommendations for Indian crops.
 """
 
 import os
+import uuid
 import joblib
 import datetime
 import numpy as np
@@ -30,6 +31,15 @@ def get_current_season(date: Optional[datetime.date] = None) -> str:
         if month in months:
             return season
     return "Kharif"
+
+
+def get_fertilizer_guidance(crop_name: str, typical_npk: Optional[str]) -> str:
+    npk_val = typical_npk or "120:60:40"
+    return (
+        f"Recommended N:P:K target: {npk_val} kg/ha. "
+        "Apply 100% P, 100% K, and 50% N as basal dose at sowing/transplanting; "
+        "top-dress remaining 50% N in two equal splits during active vegetative growth."
+    )
 
 
 class RuleBasedAdvisor:
@@ -235,13 +245,19 @@ class CropAdvisorService:
                 source = "rule_engine"
                 reasons = list(item["reasons"])
 
+            crop_obj = item["crop"]
+            typical_npk = crop_obj.typical_npk or "120:60:40"
+            fert_guidance = get_fertilizer_guidance(crop_obj.name, typical_npk)
+
             combined_items.append(
                 CropRecommendationItem(
-                    crop_name=item["crop"].name,
+                    crop_name=crop_obj.name,
                     score=min(100.0, max(0.0, final_score)),
                     source=source,
                     reasons=reasons,
                     cautions=item["cautions"],
+                    typical_npk=typical_npk,
+                    fertilizer_guidance=fert_guidance,
                 )
             )
 

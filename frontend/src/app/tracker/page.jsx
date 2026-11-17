@@ -52,6 +52,8 @@ export default function TrackerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [customYieldInput, setCustomYieldInput] = useState("");
+  const [isEditingYield, setIsEditingYield] = useState(false);
 
   // Add Expense Form state
   const [newCategory, setNewCategory] = useState("seed");
@@ -86,7 +88,7 @@ export default function TrackerPage() {
   }, []);
 
   // 2. Fetch Expenses & Profit Summary
-  const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async (yieldOverride = null) => {
     if (!selectedFarmId) {
       setLoading(false);
       return;
@@ -108,8 +110,10 @@ export default function TrackerPage() {
       // Fetch profit summary if crop is selected
       if (selectedCropId) {
         try {
+          const yieldParam = yieldOverride !== null ? yieldOverride : customYieldInput;
+          const yieldQuery = yieldParam ? `&expected_yield_quintal=${yieldParam}` : "";
           const pRes = await api.get(
-            `/profit-summary?farm_id=${selectedFarmId}&crop_id=${selectedCropId}`
+            `/profit-summary?farm_id=${selectedFarmId}&crop_id=${selectedCropId}${yieldQuery}`
           );
           setProfitData(pRes);
         } catch (pErr) {
@@ -122,7 +126,7 @@ export default function TrackerPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedFarmId, selectedCropId]);
+  }, [selectedFarmId, selectedCropId, customYieldInput]);
 
   useEffect(() => {
     if (selectedFarmId) {
@@ -325,6 +329,102 @@ export default function TrackerPage() {
                   </span>
                 </div>
               )}
+            </Card>
+          )}
+
+          {/* YIELD PREDICTION WITH RANGE */}
+          {profitData && (
+            <Card className="p-4 space-y-3 bg-white border border-krishi-border shadow-xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-krishi-green flex items-center justify-center">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-krishi-text">
+                      Yield Prediction & Harvest Forecast
+                    </h4>
+                    <span className="text-[10px] text-krishi-grey">
+                      {profitData.is_yield_estimated ? "AI XGBoost Model Estimate" : "Custom Specified Yield"}
+                    </span>
+                  </div>
+                </div>
+                <Chip variant={profitData.is_yield_estimated ? "success" : "info"} className="text-[10px] py-0.5">
+                  {profitData.is_yield_estimated ? "ML Model" : "Manual"}
+                </Chip>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-krishi-border text-center">
+                <div>
+                  <span className="text-[10px] text-krishi-grey block">Min Range</span>
+                  <span className="text-xs font-mono font-bold text-krishi-text">
+                    {profitData.yield_estimation_range?.min_quintal ?? (Number(profitData.yield_quintal) * 0.85).toFixed(1)} Q
+                  </span>
+                </div>
+                <div className="border-x border-krishi-border">
+                  <span className="text-[10px] text-krishi-green font-bold block">Expected Yield</span>
+                  <span className="text-sm font-mono font-black text-krishi-green">
+                    {Number(profitData.yield_quintal).toFixed(1)} Q
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-krishi-grey block">Max Range</span>
+                  <span className="text-xs font-mono font-bold text-krishi-text">
+                    {profitData.yield_estimation_range?.max_quintal ?? (Number(profitData.yield_quintal) * 1.15).toFixed(1)} Q
+                  </span>
+                </div>
+              </div>
+
+              {/* Yield Adjuster */}
+              <div className="pt-1">
+                {isEditingYield ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      setIsEditingYield(false);
+                      refreshData(customYieldInput);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      placeholder="Quintals"
+                      value={customYieldInput}
+                      onChange={(e) => setCustomYieldInput(e.target.value)}
+                      className="flex-1 px-2.5 py-1.5 text-xs font-mono border border-krishi-border rounded-button focus:ring-2 focus:ring-krishi-green"
+                    />
+                    <Button type="submit" size="sm">
+                      Apply
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditingYield(false);
+                        setCustomYieldInput("");
+                        refreshData("");
+                      }}
+                      className="text-xs text-krishi-grey hover:text-krishi-red px-1"
+                    >
+                      Reset
+                    </button>
+                  </form>
+                ) : (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-krishi-grey">
+                      Want to test a different yield scenario?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingYield(true)}
+                      className="font-bold text-krishi-green hover:underline"
+                    >
+                      Adjust Yield
+                    </button>
+                  </div>
+                )}
+              </div>
             </Card>
           )}
 

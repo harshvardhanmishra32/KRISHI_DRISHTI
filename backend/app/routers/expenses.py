@@ -6,7 +6,7 @@ import uuid
 import datetime
 from decimal import Decimal
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, Path, status
+from fastapi import APIRouter, Depends, Query, Path, Body, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -132,7 +132,7 @@ def get_expense(
 )
 def update_expense(
     id: uuid.UUID = Path(..., description="Expense UUID"),
-    expense_in: ExpenseUpdate = ...,
+    expense_in: ExpenseUpdate = Body(...),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -173,7 +173,7 @@ def delete_expense(
 def get_profit_summary(
     farm_id: uuid.UUID = Query(..., description="Farm UUID"),
     crop_id: uuid.UUID = Query(..., description="Crop UUID"),
-    expected_yield_quintal: Optional[Decimal] = Query(None, gt=Decimal("0.00"), description="Optional harvest yield in quintals"),
+    expected_yield_quintal: Optional[Decimal] = Query(None, gt=0.0, description="Optional harvest yield in quintals"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):

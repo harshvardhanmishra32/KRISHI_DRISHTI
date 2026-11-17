@@ -380,12 +380,20 @@ export default function DashboardPage() {
             <h2 className="text-xs font-bold text-krishi-grey uppercase tracking-wider">
               {t("recent_activity")}
             </h2>
-            <Link
-              href="/scan"
-              className="text-xs font-bold text-krishi-green hover:underline flex items-center"
-            >
-              New Scan <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/history"
+                className="text-xs font-bold text-krishi-grey hover:text-krishi-text hover:underline"
+              >
+                View History
+              </Link>
+              <Link
+                href="/scan"
+                className="text-xs font-bold text-krishi-green hover:underline flex items-center"
+              >
+                New Scan <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
 
           {recentScan ? (

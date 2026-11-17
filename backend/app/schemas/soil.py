@@ -51,6 +51,8 @@ class CropRecommendationItem(BaseModel):
     source: str  # "rule_engine", "ml_model", "hybrid"
     reasons: List[str]
     cautions: List[str]
+    typical_npk: Optional[str] = None
+    fertilizer_guidance: Optional[str] = None
 
 
 class CropRecommendationResponse(BaseModel):

@@ -15,6 +15,8 @@ import {
   Sparkles,
   ChevronDown,
   Info,
+  WifiOff,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -26,6 +28,11 @@ import Button from "../../components/Button";
 import Chip from "../../components/Chip";
 import ErrorBox from "../../components/ErrorBox";
 import { initTTSVoices, speakBrowserText, stopAllSpeech } from "../../lib/tts";
+import {
+  queueOfflineScan,
+  getPendingOfflineScans,
+  syncPendingScans,
+} from "../../lib/offlineClassifier";
 
 export default function ScanPage() {
   const router = useRouter();
@@ -48,6 +55,50 @@ export default function ScanPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncingOffline, setSyncingOffline] = useState(false);
+  const [offlineMessage, setOfflineMessage] = useState(null);
+
+  // Monitor network status and pending offline queue
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setIsOffline(!navigator.onLine);
+
+    const checkPending = async () => {
+      try {
+        const pending = await getPendingOfflineScans();
+        setPendingCount(pending?.length || 0);
+      } catch (e) {
+        console.warn("Error reading offline scans:", e);
+      }
+    };
+    checkPending();
+
+    const handleOnline = async () => {
+      setIsOffline(false);
+      try {
+        const res = await syncPendingScans(api);
+        if (res.synced > 0) {
+          setOfflineMessage(`Automatically synced ${res.synced} offline scans!`);
+        }
+        checkPending();
+      } catch (e) {
+        console.warn("Sync on reconnect error:", e);
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Fetch crops & farms on mount
   useEffect(() => {
@@ -143,6 +194,22 @@ export default function ScanPage() {
     }
   };
 
+  const handleManualSync = async () => {
+    setSyncingOffline(true);
+    try {
+      const res = await syncPendingScans(api);
+      const pending = await getPendingOfflineScans();
+      setPendingCount(pending?.length || 0);
+      if (res.synced > 0) {
+        setOfflineMessage(`Successfully synced ${res.synced} offline scans to cloud.`);
+      }
+    } catch (e) {
+      setError("Failed to sync offline scans. Check network connection.");
+    } finally {
+      setSyncingOffline(false);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!imageFile) {
       setError("Please capture or upload a leaf photo first.");
@@ -152,6 +219,30 @@ export default function ScanPage() {
     setAnalyzing(true);
     setIsSlowNetwork(false);
     setError(null);
+    setOfflineMessage(null);
+
+    // If device is currently offline, store in IndexedDB queue immediately
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      try {
+        await queueOfflineScan({
+          imageBlob: imageFile,
+          crop: selectedCrop,
+          farmId: selectedFarmId,
+        });
+        const pending = await getPendingOfflineScans();
+        setPendingCount(pending?.length || 0);
+        setOfflineMessage(
+          "Device is offline. Your leaf photo is safely saved to the offline queue and will automatically analyze once connectivity returns."
+        );
+        setImageFile(null);
+        setImagePreviewUrl(null);
+      } catch (e) {
+        setError("Failed to save offline scan to local queue.");
+      } finally {
+        setAnalyzing(false);
+      }
+      return;
+    }
 
     // Slow network trigger after 5 seconds
     const slowTimer = setTimeout(() => {
@@ -172,7 +263,32 @@ export default function ScanPage() {
       setResult(res);
     } catch (err) {
       clearTimeout(slowTimer);
-      setError(err.message || "Failed to analyze image. Please try again.");
+      const errMsg = err.message?.toLowerCase() || "";
+      if (
+        !navigator.onLine ||
+        errMsg.includes("network") ||
+        errMsg.includes("failed to fetch") ||
+        errMsg.includes("offline")
+      ) {
+        try {
+          await queueOfflineScan({
+            imageBlob: imageFile,
+            crop: selectedCrop,
+            farmId: selectedFarmId,
+          });
+          const pending = await getPendingOfflineScans();
+          setPendingCount(pending?.length || 0);
+          setOfflineMessage(
+            "Network lost during scan. Your leaf photo was queued locally and will sync once connection stabilizes."
+          );
+          setImageFile(null);
+          setImagePreviewUrl(null);
+        } catch (qErr) {
+          setError("Network connection failed and could not queue scan.");
+        }
+      } else {
+        setError(err.message || "Failed to analyze image. Please try again.");
+      }
     } finally {
       setAnalyzing(false);
       setIsSlowNetwork(false);
@@ -260,9 +376,72 @@ export default function ScanPage() {
         <div className="p-4 space-y-4">
           {error && <ErrorBox error={error} onDismiss={() => setError(null)} />}
 
+          {/* Offline Status Alert */}
+          {isOffline && (
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 text-xs flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-2">
+                <WifiOff className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>Offline Mode: Scans are saved locally on your phone.</span>
+              </div>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 bg-amber-200/80 rounded">
+                Offline
+              </span>
+            </div>
+          )}
+
+          {/* Pending Offline Sync Queue Banner */}
+          {pendingCount > 0 && (
+            <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-xs flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-krishi-green flex-shrink-0" />
+                <span>
+                  <strong>{pendingCount}</strong> scan{pendingCount > 1 ? "s" : ""} waiting in offline queue
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleManualSync}
+                disabled={syncingOffline}
+                className="px-2.5 py-1 bg-krishi-green text-white text-[11px] font-bold rounded-button flex items-center gap-1 hover:bg-krishi-dark disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3 h-3 ${syncingOffline ? "animate-spin" : ""}`} />
+                <span>{syncingOffline ? "Syncing..." : "Sync Now"}</span>
+              </button>
+            </div>
+          )}
+
+          {/* Offline Notification Message */}
+          {offlineMessage && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs flex items-start justify-between shadow-xs">
+              <span>{offlineMessage}</span>
+              <button
+                type="button"
+                onClick={() => setOfflineMessage(null)}
+                className="text-xs text-blue-600 font-bold ml-2 hover:underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* 1. SELECTION FORM (Only when no result yet) */}
           {!result && (
             <>
+              {/* Top Navigation Row */}
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-bold text-krishi-grey uppercase tracking-wider">
+                  Leaf Diagnosis
+                </span>
+                <button
+                  type="button"
+                  onClick={() => router.push("/history")}
+                  className="text-xs font-bold text-krishi-green hover:underline flex items-center gap-1"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Scan History</span>
+                </button>
+              </div>
+
               {/* Crop & Farm Picker */}
               <Card className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
