@@ -172,6 +172,45 @@ def demo_login(db: Session = Depends(get_db)):
     )
 
 
+@router.post(
+    "/demo-officer-login",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="One-click demo login for Agriculture Officer"
+)
+def demo_officer_login(db: Session = Depends(get_db)):
+    """
+    Instantly provisions or fetches a verified demo agriculture officer (Dr. Verma)
+    with officer permissions, returning a valid JWT session.
+    """
+    officer_phone = "9123456780"
+    user = db.query(User).filter(User.phone == officer_phone).first()
+    if not user:
+        from app.core.security import hash_password
+        user = User(
+            name="Dr. S. K. Verma (District Agri Officer)",
+            phone=officer_phone,
+            email="officer.verma@krishi.gov.in",
+            password_hash=hash_password("Officer@123"),
+            preferred_language="en",
+            role=UserRole.OFFICER
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    role_val = user.role.value if hasattr(user.role, "value") else str(user.role)
+    token = create_access_token(
+        subject=str(user.id),
+        extra_claims={"role": role_val, "name": user.name}
+    )
+    return TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user)
+    )
+
+
 @router.get(
     "/me",
     response_model=UserResponse,

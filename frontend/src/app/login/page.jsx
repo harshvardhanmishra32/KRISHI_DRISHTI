@@ -17,7 +17,7 @@ function LoginForm() {
   const redirectPath = searchParams.get("redirect") || "/dashboard";
   const initialPhone = searchParams.get("phone") || "";
 
-  const { login, demoLogin } = useAuth();
+  const { login, demoLogin, demoOfficerLogin } = useAuth();
   const { t } = useLanguage();
 
   const [phone, setPhone] = useState(initialPhone);
@@ -42,6 +42,20 @@ function LoginForm() {
     } catch (err) {
       console.error("Demo login failed:", err);
       setError(err.message || "Failed to start demo session. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoOfficerLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await demoOfficerLogin();
+      window.location.href = redirectPath;
+    } catch (err) {
+      console.error("Officer demo login failed:", err);
+      setError(err.message || "Failed to start officer demo session.");
     } finally {
       setLoading(false);
     }
@@ -91,15 +105,27 @@ function LoginForm() {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={handleDemoLogin}
-          disabled={loading}
-          className="w-full py-3 px-4 bg-emerald-50 hover:bg-emerald-100 border border-krishi-green/40 text-krishi-dark font-bold text-xs rounded-button flex items-center justify-center gap-2 transition-all shadow-xs active:scale-95 mb-4"
-        >
-          <Sprout className="w-4 h-4 text-krishi-green" />
-          <span>🌾 Quick Demo Login (एक क्लिक में डेमो चलाएं)</span>
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={loading}
+            className="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 border border-krishi-green/40 text-krishi-dark font-bold text-xs rounded-button flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95 disabled:opacity-50"
+          >
+            <Sprout className="w-4 h-4 text-krishi-green" />
+            <span>🌾 Farmer Demo</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDemoOfficerLogin}
+            disabled={loading}
+            className="w-full py-2.5 px-3 bg-blue-50 hover:bg-blue-100 border border-blue-300 text-blue-900 font-bold text-xs rounded-button flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95 disabled:opacity-50"
+          >
+            <Lock className="w-4 h-4 text-blue-600" />
+            <span>🛡️ Officer Demo</span>
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 mb-4">
           <div className="flex-1 h-px bg-slate-200" />
@@ -160,6 +186,34 @@ function LoginForm() {
             </Button>
           </div>
         </form>
+
+        <div className="mt-4 pt-3 border-t border-krishi-border/60 text-center">
+          <span className="text-[11px] text-krishi-grey block mb-1.5 font-medium">
+            Demo Credentials (click to fill):
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setPhone("9876543210");
+                setPassword("Farmer@123");
+              }}
+              className="text-[11px] font-mono font-bold px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-md border border-emerald-200 transition-colors"
+            >
+              Farmer (9876543210)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPhone("9123456780");
+                setPassword("Officer@123");
+              }}
+              className="text-[11px] font-mono font-bold px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-md border border-blue-200 transition-colors"
+            >
+              Officer (9123456780)
+            </button>
+          </div>
+        </div>
       </Card>
 
       <div className="text-center mt-6">

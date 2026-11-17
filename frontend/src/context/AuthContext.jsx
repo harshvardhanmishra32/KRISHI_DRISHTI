@@ -53,6 +53,15 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  const demoOfficerLogin = async () => {
+    const data = await api.post("/auth/demo-officer-login", {});
+    setToken(data.access_token);
+    setUser(data.user);
+    localStorage.setItem("krishi_token", data.access_token);
+    localStorage.setItem("krishi_user", JSON.stringify(data.user));
+    return data.user;
+  };
+
   const signup = async (signupData) => {
     const newUser = await api.post("/auth/signup", signupData);
     // Automatically log in upon successful registration
@@ -68,7 +77,18 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, demoLogin, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        demoLogin,
+        demoOfficerLogin,
+        signup,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

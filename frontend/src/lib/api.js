@@ -43,8 +43,13 @@ export async function apiRequest(endpoint, options = {}, retries = 1) {
     });
     clearTimeout(timeoutId);
 
-    // Handle 401 Unauthorized -> redirect to login
-    if (response.status === 401) {
+    // Handle 401 Unauthorized -> redirect to login (except for login/signup endpoints)
+    const isAuthRequest =
+      url.includes("/auth/login") ||
+      url.includes("/auth/demo") ||
+      url.includes("/auth/signup");
+
+    if (response.status === 401 && !isAuthRequest) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("krishi_token");
         localStorage.removeItem("krishi_user");
