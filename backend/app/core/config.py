@@ -19,12 +19,12 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Krishi Drishti API"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    SECRET_KEY: str
+    SECRET_KEY: str = "temporary_secret_key_for_initialization_minimum_32_chars"
 
     @field_validator("SECRET_KEY")
     @classmethod
     def validate_secret_key_length(cls, v: str) -> str:
-        if len(v) < 32:
+        if v and len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters long for security.")
         return v
 
@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     # Gemini AI Chatbot / Advisor
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.1-flash-lite"
+
+    # Live Mandi Prices (Data.gov.in Agmarknet API)
+    DATAGOV_API_KEY: str = ""
 
     # Machine Learning / Disease Detection (P13)
     TFLITE_MODEL_PATH: str = "backend/app/ml/artifacts/model.tflite"

@@ -79,7 +79,7 @@ class TemplateExplainer(Explainer):
 class OllamaExplainer(Explainer):
     """Local LLM explainer via Ollama with 8-second timeout and fallback."""
 
-    def __init__(self, model_name: str = "llama3.2:1b", fallback: Explainer = None):
+    def __init__(self, model_name: str = "llama3.2:1b", fallback: Explainer | None = None):
         self.model_name = model_name
         self.fallback = fallback or TemplateExplainer()
 
@@ -120,8 +120,54 @@ class OllamaExplainer(Explainer):
         return True
 
 
+class GeminiExplainer(Explainer):
+    """
+    Plain-language explainer powered by Google Gemini AI with agricultural guardrails.
+    Falls back to TemplateExplainer if key is unset, timeout occurs, or network fails.
+    """
+
+    def __init__(self, fallback: Explainer | None = None):
+        self.fallback = fallback or TemplateExplainer()
+
+    def explain(self, payload: Dict[str, Any], lang: str = "hi") -> Tuple[str, str]:
+        api_key = settings.GEMINI_API_KEY
+        if not api_key:
+            return self.fallback.explain(payload, lang)
+
+        crop = payload.get("crop", "Crop")
+        disease = payload.get("disease_name", "")
+        confidence = payload.get("confidence", 0.0)
+        symptoms = payload.get("symptoms", "")
+        treatments = payload.get("treatments", [])
+
+        prompt = (
+            f"You are Krishi Drishti's agricultural doctor. Explain this disease diagnosis to an Indian farmer in simple, reassuring words in {'Hindi' if lang == 'hi' else 'English'}.\n"
+            f"Crop: {crop}\n"
+            f"Disease: {disease} (Confidence: {int(confidence * 100)}%)\n"
+            f"Symptoms: {symptoms}\n"
+            f"Recommended Treatments: {treatments}\n"
+            "STRICT RULES:\n"
+            "1. Maximum 40-50 words.\n"
+            "2. Plain non-technical language.\n"
+            "3. Mention only the provided treatments. Do not invent unauthorized chemicals.\n"
+            "4. Remind them gently to confirm with local Krishi Vigyan Kendra before spraying."
+        )
+
+        try:
+            from app.services.gemini_service import GeminiAdvisorService
+            advice = GeminiAdvisorService.ask_advisor(prompt, lang=lang)
+            if advice:
+                return advice, "GeminiExplainer"
+        except Exception as e:
+            logger.warning(f"GeminiExplainer error: {e}. Falling back to TemplateExplainer.")
+
+        return self.fallback.explain(payload, lang)
+
+
 def get_explainer() -> Explainer:
-    backend_type = getattr(settings, "EXPLAINER_BACKEND", "template").lower()
+    backend_type = getattr(settings, "EXPLAINER_BACKEND", "").lower()
     if backend_type == "ollama":
         return OllamaExplainer()
+    if getattr(settings, "GEMINI_API_KEY", ""):
+        return GeminiExplainer()
     return TemplateExplainer()
