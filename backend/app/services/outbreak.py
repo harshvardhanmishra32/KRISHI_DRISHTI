@@ -7,6 +7,8 @@ spatially and temporally while preserving farmer privacy.
 import datetime
 import math
 import time
+import uuid
+from typing import Any, cast
 
 import numpy as np
 from geoalchemy2.elements import WKTElement
@@ -25,11 +27,11 @@ EARTH_RADIUS_KM = 6371.0088
 
 def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Computes great-circle distance between two points in km."""
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
+    dlat = math.radians(float(lat2) - float(lat1))
+    dlon = math.radians(float(lon2) - float(lon1))
     a = (
         math.sin(dlat / 2) ** 2
-        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+        + math.cos(math.radians(float(lat1))) * math.cos(math.radians(float(lat2))) * math.sin(dlon / 2) ** 2
     )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return EARTH_RADIUS_KM * c
@@ -61,7 +63,7 @@ class OutbreakService:
         eps_rad = eps_km / EARTH_RADIUS_KM
         created_count = 0
         updated_count = 0
-        active_alert_ids = set()
+        active_alert_ids: set[uuid.UUID] = set()
 
         for d in diseases:
             reports = (
@@ -75,11 +77,16 @@ class OutbreakService:
                 .all()
             )
 
-            if len(reports) < min_samples:
+            # Filter valid coordinate reports
+            valid_reports = [
+                r for r in reports if r.latitude is not None and r.longitude is not None
+            ]
+
+            if len(valid_reports) < min_samples:
                 continue
 
             # Coordinates in radians for Haversine (lat, lon order)
-            coords = np.array([[r.latitude, r.longitude] for r in reports])
+            coords = np.array([[float(r.latitude), float(r.longitude)] for r in valid_reports])  # type: ignore[arg-type]
             coords_rad = np.radians(coords)
 
             dbscan = DBSCAN(eps=eps_rad, min_samples=min_samples, metric="haversine", algorithm="ball_tree")
@@ -89,19 +96,22 @@ class OutbreakService:
 
             for lbl in unique_labels:
                 cluster_indices = np.where(labels == lbl)[0]
-                cluster_reports = [reports[i] for i in cluster_indices]
+                cluster_reports = [valid_reports[int(i)] for i in cluster_indices]
 
                 # Check distinct farmer threshold (min 3 to prevent single-farm false alert)
                 distinct_users = {r.user_id for r in cluster_reports}
                 if len(distinct_users) < min_distinct_farmers:
                     continue
 
-                cluster_lats = [r.latitude for r in cluster_reports if r.latitude is not None]
-                cluster_lons = [r.longitude for r in cluster_reports if r.longitude is not None]
+                cluster_lats = [float(r.latitude) for r in cluster_reports if r.latitude is not None]  # type: ignore[arg-type]
+                cluster_lons = [float(r.longitude) for r in cluster_reports if r.longitude is not None]  # type: ignore[arg-type]
+                if not cluster_lats or not cluster_lons:
+                    continue
+
                 centroid_lat = float(np.mean(cluster_lats))
                 centroid_lon = float(np.mean(cluster_lons))
                 report_count = len(cluster_reports)
-                is_sim = any(r.is_simulated for r in cluster_reports)
+                is_sim = any(bool(r.is_simulated) for r in cluster_reports)
 
                 # Determine alert level
                 if report_count >= 10:
@@ -116,8 +126,8 @@ class OutbreakService:
                 district = "Lucknow"
                 for cr in cluster_reports:
                     if cr.farm and cr.farm.state and cr.farm.district:
-                        state = cr.farm.state
-                        district = cr.farm.district
+                        state = str(cr.farm.state)
+                        district = str(cr.farm.district)
                         break
 
                 # Check for existing active alert for this disease near centroid (< 15 km)
@@ -132,7 +142,6 @@ class OutbreakService:
 
                 matched_alert = None
                 for ea in existing_alerts:
-                    # Parse centroid if possible or compare
                     matched_alert = ea
                     break
 
@@ -149,7 +158,7 @@ class OutbreakService:
                         disease_id=d.id,
                         state=state,
                         district=district,
-                        centroid=centroid_geom,
+                        centroid=cast(Any, centroid_geom),
                         report_count=report_count,
                         alert_level=alert_lvl,
                         status=AlertStatus.ACTIVE,
@@ -202,7 +211,7 @@ class OutbreakService:
 
         # If user is a farmer, filter to alerts within 50 km of any of their farms
         is_officer = current_user.role in [UserRole.OFFICER, UserRole.ADMIN]
-        user_farms = []
+        user_farms: list[Farm] = []
         if not is_officer:
             user_farms = self.db.query(Farm).filter(Farm.user_id == current_user.id).all()
 
@@ -212,9 +221,9 @@ class OutbreakService:
             # Default fallback coordinates
             lat = 26.85
             lon = 80.95
-            if a.state == "Maharashtra":
+            if str(a.state) == "Maharashtra":
                 lat, lon = 19.99, 73.78
-            elif a.state == "Gujarat":
+            elif str(a.state) == "Gujarat":
                 lat, lon = 22.30, 70.80
 
             # Round centroid to 2 decimals for privacy protection
@@ -224,33 +233,33 @@ class OutbreakService:
             # Spatial filter for farmers (50 km radius)
             if not is_officer and user_farms:
                 is_near = any(
-                    haversine_distance_km(f.latitude, f.longitude, lat, lon) <= 50.0
+                    haversine_distance_km(float(f.latitude), float(f.longitude), lat, lon) <= 50.0
                     for f in user_farms
                 )
                 if not is_near:
                     continue
 
-            d_name = a.disease.name if a.disease else "Unknown Disease"
-            c_name = a.disease.crop.name if (a.disease and a.disease.crop) else "General Crop"
+            d_name = str(a.disease.name) if a.disease else "Unknown Disease"
+            c_name = str(a.disease.crop.name) if (a.disease and a.disease.crop) else "General Crop"
 
             results.append(
-                OutbreakAlertResponse(
-                    id=a.id,
-                    disease_id=a.disease_id,
-                    disease_name=d_name,
-                    crop_name=c_name,
-                    state=a.state,
-                    district=a.district,
-                    centroid_lat=lat_rounded,
-                    centroid_lon=lon_rounded,
-                    report_count=a.report_count,
-                    alert_level=a.alert_level.value if hasattr(a.alert_level, "value") else str(a.alert_level),
-                    status=a.status.value if hasattr(a.status, "value") else str(a.status),
-                    window_start=a.window_start,
-                    window_end=a.window_end,
-                    is_simulated=a.is_simulated,
-                    created_at=a.created_at,
-                )
+                OutbreakAlertResponse.model_validate({
+                    "id": a.id,
+                    "disease_id": a.disease_id,
+                    "disease_name": d_name,
+                    "crop_name": c_name,
+                    "state": str(a.state),
+                    "district": str(a.district),
+                    "centroid_lat": lat_rounded,
+                    "centroid_lon": lon_rounded,
+                    "report_count": int(a.report_count),
+                    "alert_level": getattr(a.alert_level, "value", str(a.alert_level)),
+                    "status": getattr(a.status, "value", str(a.status)),
+                    "window_start": a.window_start,
+                    "window_end": a.window_end,
+                    "is_simulated": bool(a.is_simulated),
+                    "created_at": a.created_at,
+                })
             )
 
         return results
