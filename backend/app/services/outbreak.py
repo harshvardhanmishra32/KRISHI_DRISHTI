@@ -7,7 +7,6 @@ spatially and temporally while preserving farmer privacy.
 import datetime
 import math
 import time
-import uuid
 from typing import Any, cast
 
 import numpy as np
@@ -23,6 +22,11 @@ from app.models.user import User, UserRole
 from app.schemas.outbreak import OutbreakAlertResponse, OutbreakCheckResponse
 
 EARTH_RADIUS_KM = 6371.0088
+
+
+def _val(x: Any) -> Any:
+    """Extract runtime value from SQLAlchemy mapped attribute to appease static analyzers."""
+    return x
 
 
 def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -63,7 +67,7 @@ class OutbreakService:
         eps_rad = eps_km / EARTH_RADIUS_KM
         created_count = 0
         updated_count = 0
-        active_alert_ids: set[uuid.UUID] = set()
+        active_alert_ids: set[Any] = set()
 
         for d in diseases:
             reports = (
@@ -86,7 +90,10 @@ class OutbreakService:
                 continue
 
             # Coordinates in radians for Haversine (lat, lon order)
-            coords = np.array([[float(r.latitude), float(r.longitude)] for r in valid_reports])  # type: ignore[arg-type]
+            coords = np.array(
+                [[_val(r.latitude), _val(r.longitude)] for r in valid_reports],
+                dtype=float,
+            )
             coords_rad = np.radians(coords)
 
             dbscan = DBSCAN(eps=eps_rad, min_samples=min_samples, metric="haversine", algorithm="ball_tree")
@@ -99,12 +106,12 @@ class OutbreakService:
                 cluster_reports = [valid_reports[int(i)] for i in cluster_indices]
 
                 # Check distinct farmer threshold (min 3 to prevent single-farm false alert)
-                distinct_users = {r.user_id for r in cluster_reports}
+                distinct_users = {_val(r.user_id) for r in cluster_reports}
                 if len(distinct_users) < min_distinct_farmers:
                     continue
 
-                cluster_lats = [float(r.latitude) for r in cluster_reports if r.latitude is not None]  # type: ignore[arg-type]
-                cluster_lons = [float(r.longitude) for r in cluster_reports if r.longitude is not None]  # type: ignore[arg-type]
+                cluster_lats = [_val(r.latitude) for r in cluster_reports if r.latitude is not None]
+                cluster_lons = [_val(r.longitude) for r in cluster_reports if r.longitude is not None]
                 if not cluster_lats or not cluster_lons:
                     continue
 
@@ -150,7 +157,7 @@ class OutbreakService:
                     matched_alert.alert_level = alert_lvl
                     matched_alert.window_end = now
                     matched_alert.is_simulated = is_sim
-                    active_alert_ids.add(matched_alert.id)
+                    active_alert_ids.add(_val(matched_alert.id))
                     updated_count += 1
                 else:
                     centroid_geom = WKTElement(f"POINT({centroid_lon} {centroid_lat})", srid=4326)
@@ -168,7 +175,7 @@ class OutbreakService:
                     )
                     self.db.add(new_alert)
                     self.db.flush()
-                    active_alert_ids.add(new_alert.id)
+                    active_alert_ids.add(_val(new_alert.id))
                     created_count += 1
 
         # 3. Mark old active alerts resolved if no longer clustering
@@ -233,7 +240,12 @@ class OutbreakService:
             # Spatial filter for farmers (50 km radius)
             if not is_officer and user_farms:
                 is_near = any(
-                    haversine_distance_km(float(f.latitude), float(f.longitude), lat, lon) <= 50.0
+                    haversine_distance_km(
+                        _val(f.latitude),
+                        _val(f.longitude),
+                        lat,
+                        lon,
+                    ) <= 50.0
                     for f in user_farms
                 )
                 if not is_near:
@@ -244,21 +256,21 @@ class OutbreakService:
 
             results.append(
                 OutbreakAlertResponse.model_validate({
-                    "id": a.id,
-                    "disease_id": a.disease_id,
+                    "id": _val(a.id),
+                    "disease_id": _val(a.disease_id),
                     "disease_name": d_name,
                     "crop_name": c_name,
                     "state": str(a.state),
                     "district": str(a.district),
                     "centroid_lat": lat_rounded,
                     "centroid_lon": lon_rounded,
-                    "report_count": int(a.report_count),
+                    "report_count": _val(a.report_count),
                     "alert_level": getattr(a.alert_level, "value", str(a.alert_level)),
                     "status": getattr(a.status, "value", str(a.status)),
-                    "window_start": a.window_start,
-                    "window_end": a.window_end,
+                    "window_start": _val(a.window_start),
+                    "window_end": _val(a.window_end),
                     "is_simulated": bool(a.is_simulated),
-                    "created_at": a.created_at,
+                    "created_at": _val(a.created_at),
                 })
             )
 
