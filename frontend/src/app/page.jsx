@@ -1,144 +1,327 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Sprout, Camera, CloudSun, FlaskConical, IndianRupee } from "lucide-react";
+import {
+  Sprout,
+  Camera,
+  CloudSun,
+  FlaskConical,
+  IndianRupee,
+  Mic,
+  MapPin,
+  Sparkles,
+  ChevronRight,
+  Zap,
+  ArrowRight,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import Button from "../components/Button";
-import LanguageSwitcher from "../components/LanguageSwitcher";
+import CinematicNav from "../components/ui/CinematicNav";
+import ScrollProgress from "../components/ui/ScrollProgress";
+import SproutLoader from "../components/ui/SproutLoader";
+import FieldTelemetry from "../components/ui/FieldTelemetry";
+import ScannerLensCursor from "../components/ui/ScannerLensCursor";
+import PageTransitionWipe from "../components/ui/PageTransitionWipe";
+import HeroChapter from "../components/sections/HeroChapter";
+import LeafScannerChapter from "../components/sections/LeafScannerChapter";
+import VoiceEngineChapter from "../components/sections/VoiceEngineChapter";
+import SafeSprayChapter from "../components/sections/SafeSprayChapter";
+import SoilYieldChapter from "../components/sections/SoilYieldChapter";
+import SpatialOutbreaksChapter from "../components/sections/SpatialOutbreaksChapter";
+import MandiLedgerChapter from "../components/sections/MandiLedgerChapter";
+import FinalCTAChapter from "../components/sections/FinalCTAChapter";
+import { hapticLight, hapticSuccess } from "../lib/haptics";
 
-export default function LandingPage() {
+// Dynamically import 3D Scene with SSR disabled for Next.js App Router safety
+const Scene = dynamic(() => import("../components/three/Scene"), {
+  ssr: false,
+});
+
+export default function CinematicLandingPage() {
   const router = useRouter();
   const { user, demoLogin } = useAuth();
   const { t } = useLanguage();
 
-  const handleScanClick = () => {
-    if (user) {
-      router.push("/scan");
+  const containerRef = useRef(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const lenisRef = useRef(null);
+
+  // 1. Detect screen size and accessibility preferences
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    // Support deterministic preview scrolling via ?scroll=PERCENT query param
+    const params = new URLSearchParams(window.location.search);
+    const scrollParam = params.get("scroll");
+    if (scrollParam) {
+      const pct = parseFloat(scrollParam) / 100;
+      setTimeout(() => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo({ top: maxScroll * pct, behavior: "instant" });
+      }, 400);
+    }
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // 2. Initialize Lenis + GSAP ScrollTrigger Synchronization
+  useEffect(() => {
+    let gsapInstance;
+    let ScrollTriggerInstance;
+    let lenisInstance;
+
+    const setupSmoothScroll = async () => {
+      // Respect user's reduced motion preference
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      const gsapModule = await import("gsap");
+      const scrollTriggerModule = await import("gsap/ScrollTrigger");
+      const LenisModule = await import("lenis");
+
+      gsapInstance = gsapModule.gsap || gsapModule.default;
+      ScrollTriggerInstance =
+        scrollTriggerModule.ScrollTrigger || scrollTriggerModule.default;
+      const Lenis = LenisModule.default || LenisModule;
+
+      gsapInstance.registerPlugin(ScrollTriggerInstance);
+
+      if (!prefersReducedMotion) {
+        lenisInstance = new Lenis({
+          duration: 1.2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true,
+          touchMultiplier: 1.5,
+        });
+
+        lenisRef.current = lenisInstance;
+
+        // Synchronize Lenis scroll ticker with GSAP ScrollTrigger
+        lenisInstance.on("scroll", ScrollTriggerInstance.update);
+
+        gsapInstance.ticker.add((time) => {
+          lenisInstance.raf(time * 1000);
+        });
+
+        gsapInstance.ticker.lagSmoothing(0);
+      }
+
+      // Master scroll progress tracker over the entire document
+      if (containerRef.current) {
+        ScrollTriggerInstance.create({
+          trigger: containerRef.current,
+          start: "top top",
+          end: "bottom bottom",
+          onUpdate: (self) => {
+            setScrollProgress(self.progress);
+          },
+        });
+      }
+    };
+
+    setupSmoothScroll();
+
+    return () => {
+      if (lenisInstance) {
+        lenisInstance.destroy();
+      }
+      if (ScrollTriggerInstance) {
+        ScrollTriggerInstance.getAll().forEach((trigger) => trigger.kill());
+      }
+    };
+  }, []);
+
+  // Smooth scroll to chapter percentage
+  const handleScrollToProgress = (targetProgress) => {
+    if (lenisRef.current && containerRef.current) {
+      const totalScroll =
+        containerRef.current.scrollHeight - window.innerHeight;
+      lenisRef.current.scrollTo(totalScroll * targetProgress, {
+        duration: 1.4,
+      });
     } else {
-      router.push("/login?redirect=/scan");
+      const totalScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo({
+        top: totalScroll * targetProgress,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const navigateTo = (route) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("krishi:navigate-start"));
+    }
+    setTimeout(() => {
+      router.push(route);
+    }, 250);
+  };
+
+  const handleScanClick = () => {
+    hapticLight();
+    navigateTo(user ? "/scan" : "/login?redirect=/scan");
+  };
+
+  const handleVoiceClick = () => {
+    hapticLight();
+    navigateTo(user ? "/voice" : "/login?redirect=/voice");
+  };
+
+  const handleWeatherClick = () => {
+    hapticLight();
+    navigateTo("/weather");
+  };
+
+  const handleSoilClick = () => {
+    hapticLight();
+    navigateTo(user ? "/soil" : "/login?redirect=/soil");
+  };
+
+  const handleOutbreakClick = () => {
+    hapticLight();
+    navigateTo(user ? "/outbreaks" : "/login?redirect=/outbreaks");
+  };
+
+  const handleTrackerClick = () => {
+    hapticLight();
+    navigateTo(user ? "/tracker" : "/login?redirect=/tracker");
+  };
+
+  const handleSignupClick = () => {
+    hapticLight();
+    navigateTo("/signup");
+  };
+
+  const handleDemoClick = async () => {
+    hapticSuccess();
+    try {
+      await demoLogin();
+      navigateTo("/dashboard");
+    } catch {
+      navigateTo("/login");
     }
   };
 
   return (
-    <div className="p-6 flex flex-col justify-between min-h-screen text-center bg-gradient-to-b from-krishi-light/40 via-white to-white">
-      {/* Top Bar with Language Switcher */}
-      <div className="flex justify-between items-center pt-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-krishi-light flex items-center justify-center text-krishi-green">
-            <Sprout className="w-5 h-5" />
-          </div>
-          <span className="text-sm font-bold tracking-tight text-krishi-dark">
-            Krishi Drishti
-          </span>
-        </div>
-        <LanguageSwitcher />
-      </div>
+    <div
+      ref={containerRef}
+      className="relative w-full min-h-screen bg-[#F8FAFC] text-slate-900 antialiased selection:bg-emerald-100 selection:text-emerald-900 overflow-x-hidden"
+    >
+      {/* Studio Scanner-Lens Cursor */}
+      <ScannerLensCursor />
 
-      {/* Hero Section */}
-      <div className="my-auto py-8 space-y-6">
-        <div className="w-24 h-24 mx-auto bg-krishi-light rounded-full flex items-center justify-center text-krishi-green shadow-sm ring-8 ring-green-50">
-          <Sprout className="w-12 h-12" />
-        </div>
+      {/* Page Transition Sprout Wipe */}
+      <PageTransitionWipe />
 
-        <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold text-krishi-text tracking-tight font-sans">
-            {t("app_name")}
-          </h1>
-          <p className="text-sm text-krishi-grey max-w-[280px] mx-auto leading-relaxed">
-            {t("tagline")}
-          </p>
-        </div>
+      {/* Asset Preloader */}
+      <SproutLoader />
 
-        {/* Primary Call to Action */}
-        <div className="space-y-3 pt-4 max-w-xs mx-auto">
-          <Button
-            onClick={handleScanClick}
-            icon={Camera}
-            className="w-full text-base font-bold shadow-md"
-          >
-            {t("scan_tile")}
-          </Button>
+      {/* Persistent 3D WebGL Canvas (Fixed in background) */}
+      <Scene scrollProgress={scrollProgress} isMobile={isMobile} />
 
-          {user ? (
-            <Button
-              variant="outline"
-              onClick={() => router.push("/dashboard")}
-            >
-              {t("nav_home")}
-            </Button>
-          ) : (
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                onClick={() => router.push("/login")}
-                className="w-full"
-              >
-                {t("login")} / {t("signup")}
-              </Button>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await demoLogin();
-                    router.push("/dashboard");
-                  } catch (e) {
-                    router.push("/login");
-                  }
-                }}
-                className="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100/80 border border-krishi-green/40 text-krishi-dark font-bold text-xs rounded-button flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
-              >
-                <Sprout className="w-3.5 h-3.5 text-krishi-green" />
-                <span>🌾 Explore Demo (डेमो देखें)</span>
-              </button>
-            </div>
-          )}
-        </div>
+      {/* Floating HUD Controls */}
+      <ScrollProgress progress={scrollProgress} onScrollTo={handleScrollToProgress} />
+      <CinematicNav onScrollTo={handleScrollToProgress} progress={scrollProgress} />
+      <FieldTelemetry />
 
-        {/* 3 Quick Preview Tiles */}
-        <div className="grid grid-cols-3 gap-3 pt-6">
-          <button
-            onClick={() => router.push("/weather")}
-            className="p-3 bg-white rounded-card border border-krishi-border shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-all hover:border-krishi-green/40"
-          >
-            <div className="p-2 rounded-full bg-blue-50 text-krishi-blue">
-              <CloudSun className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-semibold text-krishi-text">
-              {t("weather_tile")}
-            </span>
-          </button>
-          <button
-            onClick={() => router.push("/soil")}
-            className="p-3 bg-white rounded-card border border-krishi-border shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-all hover:border-krishi-green/40"
-          >
-            <div className="p-2 rounded-full bg-amber-50 text-amber-600">
-              <FlaskConical className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-semibold text-krishi-text">
-              {t("soil_tile")}
-            </span>
-          </button>
-          <button
-            onClick={() => router.push("/tracker")}
-            className="p-3 bg-white rounded-card border border-krishi-border shadow-sm flex flex-col items-center gap-2 active:scale-95 transition-all hover:border-krishi-green/40"
-          >
-            <div className="p-2 rounded-full bg-emerald-50 text-krishi-green">
-              <IndianRupee className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-semibold text-krishi-text">
-              {t("expenses_tile")}
-            </span>
-          </button>
-        </div>
-      </div>
+      {/* Tactile Studio Micro-Grain Overlay */}
+      <div className="fixed inset-0 pointer-events-none z-50 grain-overlay opacity-60" />
 
-      {/* Footer Info */}
-      <div className="pb-4 text-center">
-        <span className="text-xs text-krishi-grey">
-          कृषि दृष्टि • Made for Indian Farmers
-        </span>
+      {/* Foreground Interactive DOM Story Chapters (Positioned above 3D canvas) */}
+      <div className="relative z-10 w-full pointer-events-auto">
+        
+        {/* ========================================================================= */}
+        {/* CHAPTER 1: HERO (0% - 12%)                                                */}
+        {/* ========================================================================= */}
+        <HeroChapter
+          scrollProgress={scrollProgress}
+          isMobile={isMobile}
+          onScanClick={handleScanClick}
+          onDemoClick={handleDemoClick}
+          user={user}
+          t={t}
+        />
+
+        {/* ========================================================================= */}
+        {/* CHAPTER 2: LEAF SCANNER & EDGE PATHOLOGY (12% - 40%)                     */}
+        {/* ========================================================================= */}
+        <LeafScannerChapter
+          scrollProgress={scrollProgress}
+          isMobile={isMobile}
+          onScanClick={handleScanClick}
+          t={t}
+        />
+
+        {/* ========================================================================= */}
+        {/* CHAPTER 3: BILINGUAL CONVERSATIONAL VOICE ASSISTANT (40% - 55%)           */}
+        {/* ========================================================================= */}
+        <VoiceEngineChapter
+          scrollProgress={scrollProgress}
+          isMobile={isMobile}
+          onVoiceClick={handleVoiceClick}
+          t={t}
+        />
+
+        {/* ========================================================================= */}
+        {/* CHAPTER 4: 48-HOUR SAFE SPRAY WINDOW (42% - 57%)                          */}
+        {/* ========================================================================= */}
+        <SafeSprayChapter
+          scrollProgress={scrollProgress}
+          isMobile={isMobile}
+          onWeatherClick={handleWeatherClick}
+          t={t}
+        />
+
+        {/* ========================================================================= */}
+        {/* CHAPTER 5: SOIL NPK & CROP YIELD (57% - 71%)                              */}
+        {/* ========================================================================= */}
+        <SoilYieldChapter
+          scrollProgress={scrollProgress}
+          isMobile={isMobile}
+          onSoilClick={handleSoilClick}
+          t={t}
+        />
+
+        {/* ========================================================================= */}
+        {/* CHAPTER 6: POSTGIS SPATIAL OUTBREAKS (71% - 85%)                          */}
+        {/* ========================================================================= */}
+        <SpatialOutbreaksChapter
+          scrollProgress={scrollProgress}
+          isMobile={isMobile}
+          onOutbreakClick={handleOutbreakClick}
+          t={t}
+        />
+
+        {/* ========================================================================= */}
+        {/* CHAPTER 7: MANDI LEDGER & ECONOMICS (85% - 95%)                           */}
+        {/* ========================================================================= */}
+        <MandiLedgerChapter
+          scrollProgress={scrollProgress}
+          isMobile={isMobile}
+          onTrackerClick={handleTrackerClick}
+          t={t}
+        />
+
+        {/* ========================================================================= */}
+        {/* CHAPTER 8: FINAL CTA & SYSTEM FOOTER (95% - 100%)                         */}
+        {/* ========================================================================= */}
+        <FinalCTAChapter
+          onDemoClick={handleDemoClick}
+          onSignupClick={handleSignupClick}
+          user={user}
+          t={t}
+        />
+
       </div>
     </div>
   );

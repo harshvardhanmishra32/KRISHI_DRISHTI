@@ -87,6 +87,9 @@ Icon
 *.swp
 *.swo
 
+# Scratch / CDP screenshot scripts
+frontend/src/scratch/
+
 # Frontend source (overrides the generic Python lib/ build-directory rule)
 !frontend/src/lib/
 !frontend/src/lib/**

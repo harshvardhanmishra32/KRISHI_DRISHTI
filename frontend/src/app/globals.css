@@ -3,34 +3,129 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Devanagari', sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Noto Sans Devanagari", system-ui, sans-serif;
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.12);
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light !important;
 }
 
 html {
   color-scheme: light !important;
-  background-color: #F1F5F9 !important;
+  background-color: #F8FAFC !important;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #F1F5F9 !important;
+  background-color: #F8FAFC !important;
   color: #1F2937 !important;
   -webkit-tap-highlight-color: transparent;
   min-height: 100vh;
+  letter-spacing: -0.01em;
 }
 
-/* Ensure cards, headers, and navigation surfaces never invert under forced dark mode */
-header, nav, .bg-white {
+/* Eliminate 300ms touch delay across all touch targets */
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Apple Typographic Hierarchy & Optical Sizing (WWDC 2020) */
+h1, .display-large {
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+}
+
+h2, .title-1 {
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+}
+
+h3, .title-2 {
+  letter-spacing: -0.018em;
+  line-height: 1.25;
+}
+
+.caption, .subheadline-caps {
+  letter-spacing: 0.02em;
+}
+
+/* Tactile Micro-Grain Texture Overlay (3.5% Opacity Studio Polish) */
+.grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none !important;
+}
+
+/* Stat Cards 3D Elevation & Depth Polish */
+.stat-card-polish {
+  transition: transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.25), box-shadow 0.28s ease-out, border-color 0.28s ease-out;
+}
+.stat-card-polish:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 32px -6px rgba(15, 23, 42, 0.12), 0 0 0 1.5px rgba(126, 224, 176, 0.45);
+  border-color: rgba(126, 224, 176, 0.7);
+}
+
+/* Disease Pathology Chips Interactive Glow & Lift */
+.disease-chip-polish {
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.disease-chip-polish:hover {
+  transform: translateY(-2px) scale(1.05);
+  border-color: #7EE0B0 !important;
+  background-color: #F0FDF4 !important;
+  color: #166534 !important;
+  box-shadow: 0 4px 14px rgba(126, 224, 176, 0.35);
+}
+
+/* Reduced Motion Suppressions */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Translucent Apple Glass Materials */
+.glass-header {
+  background-color: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.05), inset 0 -0.5px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+.glass-bottom-bar {
+  background-color: rgba(255, 255, 255, 0.84) !important;
+  backdrop-filter: blur(26px) saturate(190%);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.05), 0 -4px 16px -2px rgba(0, 0, 0, 0.04), inset 0 0.5px 0 0 rgba(255, 255, 255, 0.8);
+}
+
+.glass-sheet {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  box-shadow: 0 -10px 35px -5px rgba(15, 23, 42, 0.16), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-card {
   background-color: #FFFFFF !important;
-  color: #1F2937 !important;
+  box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
-/* Force explicit solid colors on all form controls across browsers and platforms */
+/* Specular light catch on cards & surfaces */
+.specular-border {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Form Controls */
 input, select, textarea {
   background-color: #FFFFFF !important;
   color: #111827 !important;
-  border-color: #D1D5DB !important;
+  border-color: #E2E8F0 !important;
+  transition: all 180ms var(--ease-fluid);
 }
 
 select {
@@ -49,29 +144,53 @@ select option {
 input:focus, select:focus, textarea:focus {
   border-color: #2E7D32 !important;
   outline: none !important;
-  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2) !important;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
-/* Custom light scrollbar */
+/* Custom Light Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;
-  border-radius: 4px;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
 
-/* Safe area padding for mobile notch and home bar */
+/* Safe Area Paddings */
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+}
+
+.pt-safe {
+  padding-top: max(12px, env(safe-area-inset-top, 12px));
+}
+
+/* Accessibility: Reduced Motion (WWDC 2026 Foundation) */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessibility: Reduced Transparency */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-header, .glass-bottom-bar, .glass-sheet {
+    background-color: #FFFFFF !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: #CBD5E1 !important;
+  }
 }

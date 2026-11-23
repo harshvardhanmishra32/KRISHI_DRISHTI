@@ -3,13 +3,14 @@
 import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { User, Phone, Lock, Globe, Sprout, ArrowRight, LogIn } from "lucide-react";
+import { User, Phone, Lock, Globe, Sprout, ArrowRight, LogIn, ArrowLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import Button from "../../components/Button";
 import Card from "../../components/Card";
 import ErrorBox from "../../components/ErrorBox";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { hapticLight } from "../../lib/haptics";
 
 function SignupForm() {
   const router = useRouter();
@@ -243,15 +244,36 @@ function SignupForm() {
 }
 
 export default function SignupPage() {
+  const router = useRouter();
   const { t } = useLanguage();
 
   return (
     <div className="p-4 sm:p-6 min-h-screen flex flex-col justify-between bg-gradient-to-b from-krishi-light/30 via-white to-white">
-      {/* Top Bar */}
+      {/* Top Bar with Back Button to Landing Page */}
       <div className="flex justify-between items-center pt-2">
-        <div className="flex items-center gap-2 text-krishi-green font-bold">
-          <Sprout className="w-6 h-6" />
-          <span className="text-base font-extrabold">{t("app_name")}</span>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              hapticLight();
+              router.push("/");
+            }}
+            aria-label="Back to landing page"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-slate-700 bg-white/90 hover:bg-slate-100 border border-slate-200/80 active:scale-90 transition-all duration-150 ease-spring shadow-2xs cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              hapticLight();
+              router.push("/");
+            }}
+            className="flex items-center gap-2 text-krishi-green font-bold hover:opacity-85 transition-opacity cursor-pointer"
+          >
+            <Sprout className="w-6 h-6" />
+            <span className="text-base font-extrabold text-slate-900">{t("app_name")}</span>
+          </button>
         </div>
         <LanguageSwitcher />
       </div>

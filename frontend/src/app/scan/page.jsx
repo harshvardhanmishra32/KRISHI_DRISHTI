@@ -29,6 +29,14 @@ import Chip from "../../components/Chip";
 import ErrorBox from "../../components/ErrorBox";
 import { initTTSVoices, speakBrowserText, stopAllSpeech } from "../../lib/tts";
 import {
+  hapticLight,
+  hapticMedium,
+  hapticShutter,
+  hapticSuccess,
+  hapticWarning,
+  hapticError,
+} from "../../lib/haptics";
+import {
   queueOfflineScan,
   getPendingOfflineScans,
   syncPendingScans,
@@ -180,6 +188,7 @@ export default function ScanPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    hapticShutter();
     setError(null);
     setResult(null);
 
@@ -195,15 +204,18 @@ export default function ScanPage() {
   };
 
   const handleManualSync = async () => {
+    hapticMedium();
     setSyncingOffline(true);
     try {
       const res = await syncPendingScans(api);
       const pending = await getPendingOfflineScans();
       setPendingCount(pending?.length || 0);
       if (res.synced > 0) {
+        hapticSuccess();
         setOfflineMessage(`Successfully synced ${res.synced} offline scans to cloud.`);
       }
     } catch (e) {
+      hapticError();
       setError("Failed to sync offline scans. Check network connection.");
     } finally {
       setSyncingOffline(false);
@@ -212,10 +224,12 @@ export default function ScanPage() {
 
   const handleAnalyze = async () => {
     if (!imageFile) {
+      hapticError();
       setError("Please capture or upload a leaf photo first.");
       return;
     }
 
+    hapticMedium();
     setAnalyzing(true);
     setIsSlowNetwork(false);
     setError(null);
@@ -231,12 +245,14 @@ export default function ScanPage() {
         });
         const pending = await getPendingOfflineScans();
         setPendingCount(pending?.length || 0);
+        hapticSuccess();
         setOfflineMessage(
           "Device is offline. Your leaf photo is safely saved to the offline queue and will automatically analyze once connectivity returns."
         );
         setImageFile(null);
         setImagePreviewUrl(null);
       } catch (e) {
+        hapticError();
         setError("Failed to save offline scan to local queue.");
       } finally {
         setAnalyzing(false);
@@ -261,8 +277,14 @@ export default function ScanPage() {
       const res = await api.post("/detect-disease", formData);
       clearTimeout(slowTimer);
       setResult(res);
+      if (res.low_confidence || res.crop_mismatch) {
+        hapticWarning();
+      } else {
+        hapticSuccess();
+      }
     } catch (err) {
       clearTimeout(slowTimer);
+      hapticError();
       const errMsg = err.message?.toLowerCase() || "";
       if (
         !navigator.onLine ||
@@ -278,6 +300,7 @@ export default function ScanPage() {
           });
           const pending = await getPendingOfflineScans();
           setPendingCount(pending?.length || 0);
+          hapticSuccess();
           setOfflineMessage(
             "Network lost during scan. Your leaf photo was queued locally and will sync once connection stabilizes."
           );
@@ -306,6 +329,7 @@ export default function ScanPage() {
   }, []);
 
   const handleReset = () => {
+    hapticLight();
     setImageFile(null);
     setImagePreviewUrl(null);
     setResult(null);
@@ -318,6 +342,7 @@ export default function ScanPage() {
   // Text-To-Speech for diagnosis advice
   const handleToggleVoice = () => {
     if (!result) return;
+    hapticLight();
     if (typeof window === "undefined" || !window.speechSynthesis) {
       alert("Text-to-speech is not supported on this device.");
       return;
@@ -482,11 +507,17 @@ export default function ScanPage() {
                 </div>
               </Card>
 
-              {/* Photo Upload Area */}
-              <Card className="text-center p-5 border-dashed border-2 border-krishi-border bg-slate-50/50">
+              {/* Photo Upload Area - Apple Viewfinder Style */}
+              <div className="relative text-center p-6 rounded-[22px] border-2 border-dashed border-slate-300/80 bg-slate-50/70 backdrop-blur-sm shadow-apple-card transition-all overflow-hidden">
+                {/* Viewfinder Corner Framing Brackets */}
+                <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-krishi-green/70 rounded-tl-md pointer-events-none" />
+                <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-krishi-green/70 rounded-tr-md pointer-events-none" />
+                <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-krishi-green/70 rounded-bl-md pointer-events-none" />
+                <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-krishi-green/70 rounded-br-md pointer-events-none" />
+
                 {imagePreviewUrl ? (
-                  <div className="space-y-3">
-                    <div className="relative mx-auto w-full max-w-[260px] aspect-square rounded-card overflow-hidden shadow-md border-2 border-krishi-green">
+                  <div className="space-y-3.5 py-1">
+                    <div className="relative mx-auto w-full max-w-[260px] aspect-square rounded-[20px] overflow-hidden shadow-apple-float border-2 border-krishi-green/80 group">
                       <img
                         src={imagePreviewUrl}
                         alt="Captured Leaf"
@@ -496,35 +527,39 @@ export default function ScanPage() {
                     <button
                       type="button"
                       onClick={() => {
+                        hapticLight();
                         setImageFile(null);
                         setImagePreviewUrl(null);
                       }}
-                      className="text-xs font-bold text-krishi-red hover:underline flex items-center gap-1 mx-auto"
+                      className="text-xs font-semibold text-rose-600 hover:text-rose-700 active:scale-95 flex items-center gap-1.5 mx-auto px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 transition-all"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      {t("retake")}
+                      <span>{t("retake")}</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="py-6 space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-krishi-light flex items-center justify-center text-krishi-green mx-auto">
-                      <Camera className="w-8 h-8" />
+                  <div className="py-4 space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-emerald-100/80 border border-krishi-green/20 flex items-center justify-center text-krishi-green mx-auto shadow-sm">
+                      <Camera className="w-8 h-8 stroke-[1.8]" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-krishi-text">
+                      <h3 className="text-sm font-bold text-slate-900 tracking-tight">
                         {t("tap_hint")}
                       </h3>
-                      <p className="text-[11px] text-krishi-grey mt-0.5">
+                      <p className="text-[11.5px] text-slate-500 mt-0.5">
                         Focus closely on the spots or infected areas
                       </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2.5 justify-center pt-2 max-w-xs mx-auto">
-                      {/* Native camera trigger */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 max-w-xs mx-auto">
+                      {/* Native camera trigger - Apple Shutter Style */}
                       <button
                         type="button"
-                        onClick={() => fileInputCameraRef.current?.click()}
-                        className="flex-1 py-3 px-4 bg-krishi-green text-white text-xs font-bold rounded-button shadow-sm flex items-center justify-center gap-2 hover:bg-krishi-dark active:scale-95 transition-all cursor-pointer"
+                        onClick={() => {
+                          hapticShutter();
+                          fileInputCameraRef.current?.click();
+                        }}
+                        className="flex-1 py-3 px-4 bg-krishi-green text-white text-xs font-bold rounded-btn shadow-apple-card border-t border-white/20 flex items-center justify-center gap-2 hover:bg-krishi-dark active:scale-[0.96] transition-all duration-150 ease-spring cursor-pointer"
                       >
                         <Camera className="w-4 h-4 stroke-[2.2]" />
                         <span>{t("take_photo")}</span>
@@ -533,8 +568,11 @@ export default function ScanPage() {
                       {/* Gallery trigger */}
                       <button
                         type="button"
-                        onClick={() => fileInputGalleryRef.current?.click()}
-                        className="flex-1 py-3 px-4 bg-white border border-krishi-border text-slate-800 text-xs font-bold rounded-button shadow-xs flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+                        onClick={() => {
+                          hapticLight();
+                          fileInputGalleryRef.current?.click();
+                        }}
+                        className="flex-1 py-3 px-4 bg-white/90 border border-slate-200 text-slate-800 text-xs font-bold rounded-btn shadow-apple-card flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-[0.96] transition-all duration-150 ease-spring cursor-pointer"
                       >
                         <ImageIcon className="w-4 h-4 text-krishi-green stroke-[2.2]" />
                         <span>{t("upload_gallery")}</span>
@@ -559,7 +597,7 @@ export default function ScanPage() {
                     />
                   </div>
                 )}
-              </Card>
+              </div>
 
               {/* Action Button */}
               {imageFile && (
@@ -584,13 +622,13 @@ export default function ScanPage() {
             </>
           )}
 
-          {/* 2. DIAGNOSIS RESULT SCREEN */}
+          {/* 2. DIAGNOSIS RESULT SCREEN - Live Activity Style */}
           {result && (
-            <div className="space-y-4 animate-fadeIn">
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-fluid">
               {/* Header card with Leaf thumbnail & Diagnosis */}
-              <Card className="overflow-hidden border-2 border-krishi-green/30 shadow-md">
-                <div className="flex gap-3">
-                  <div className="w-24 h-24 rounded-card overflow-hidden bg-slate-100 flex-shrink-0 border border-krishi-border">
+              <div className="bg-white/95 backdrop-blur-md rounded-[24px] border border-krishi-green/25 p-4 shadow-apple-float">
+                <div className="flex gap-3.5">
+                  <div className="w-24 h-24 rounded-[18px] overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 shadow-sm">
                     <img
                       src={
                         imagePreviewUrl ||
@@ -601,22 +639,22 @@ export default function ScanPage() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[11px] font-bold text-krishi-grey uppercase tracking-wider">
+                    <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">
                       {result.crop}
                     </span>
-                    <h2 className="text-lg font-black text-krishi-text leading-tight truncate">
+                    <h2 className="text-[17px] font-extrabold text-slate-900 leading-tight truncate tracking-tight">
                       {result.disease.name}
                     </h2>
                     {result.disease.causal_organism && (
-                      <p className="text-[11px] italic text-krishi-grey truncate">
+                      <p className="text-[11px] italic text-slate-500 truncate mt-0.5">
                         {result.disease.causal_organism}
                       </p>
                     )}
 
                     {/* Confidence Meter */}
-                    <div className="mt-2">
+                    <div className="mt-2.5">
                       <div className="flex justify-between text-xs font-bold mb-1">
-                        <span>{t("confidence")}</span>
+                        <span className="text-slate-600">{t("confidence")}</span>
                         <span
                           className={
                             result.confidence >= 0.70
@@ -627,9 +665,9 @@ export default function ScanPage() {
                           {(result.confidence * 100).toFixed(1)}%
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/50">
                         <div
-                          className={`h-full rounded-full transition-all duration-700 ${
+                          className={`h-full rounded-full transition-all duration-700 ease-fluid ${
                             result.confidence >= 0.70
                               ? "bg-krishi-green"
                               : "bg-krishi-orange"
@@ -642,13 +680,13 @@ export default function ScanPage() {
                 </div>
 
                 {/* Voice Audio Button */}
-                <div className="mt-3 pt-3 border-t border-krishi-border flex items-center justify-between">
+                <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between">
                   <button
                     onClick={handleToggleVoice}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all duration-150 ease-spring shadow-xs ${
                       isSpeaking
                         ? "bg-krishi-red text-white"
-                        : "bg-krishi-light text-krishi-green hover:bg-emerald-100"
+                        : "bg-krishi-light/90 text-krishi-green border border-krishi-green/20 hover:bg-emerald-100"
                     }`}
                   >
                     {isSpeaking ? (
@@ -662,11 +700,11 @@ export default function ScanPage() {
                     )}
                   </button>
 
-                  <span className="text-[11px] text-krishi-grey font-mono">
+                  <span className="text-[11px] text-slate-400 font-mono">
                     {result.inference_time_ms.toFixed(0)} ms latency
                   </span>
                 </div>
-              </Card>
+              </div>
 
               {/* Warning Banners */}
               {result.low_confidence && (

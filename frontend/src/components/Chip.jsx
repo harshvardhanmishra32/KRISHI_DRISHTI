@@ -8,16 +8,16 @@ export default function Chip({
   icon: Icon,
 }) {
   const variantStyles = {
-    default: "border-krishi-border text-krishi-grey bg-gray-50",
-    success: "border-green-300 text-krishi-green bg-krishi-light",
-    warning: "border-amber-300 text-amber-800 bg-amber-50",
-    danger: "border-red-300 text-krishi-red bg-red-50",
-    info: "border-blue-300 text-krishi-blue bg-blue-50",
+    default: "border-slate-200 text-slate-700 bg-slate-50/80",
+    success: "border-emerald-200 text-emerald-800 bg-emerald-50/90",
+    warning: "border-amber-200 text-amber-900 bg-amber-50/90",
+    danger: "border-rose-200 text-rose-800 bg-rose-50/90",
+    info: "border-sky-200 text-sky-800 bg-sky-50/90",
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold border backdrop-blur-sm tracking-tight transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.02)] ${
         variantStyles[variant] || variantStyles.default
       } ${className}`}
     >
