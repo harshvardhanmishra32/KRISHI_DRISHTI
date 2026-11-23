@@ -285,7 +285,7 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 - **Author:** [Harshvardhan Mishra](https://github.com/harshvardhanmishra32)
 - **Soundtrack Reference:** *Interstellar Main Theme* by Hans Zimmer.
-- **Dataset Attribution:** PlantVillage Project (Penn State University), Indian Ministry of Agriculture & Farmers Welfare, Data.gov.in.
+- **Dataset Attribution:** PlantVillage Project (Babu Banarasi Das Northern India Institute Of Technology), Indian Ministry of Agriculture & Farmers Welfare, Data.gov.in.
 
 <div align="center">
   <sub>Made with ❤️ for Indian Agriculture and Smallholder Farmers.</sub>
