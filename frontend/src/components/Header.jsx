@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import MusicButton from "./ui/MusicButton";
 import { hapticLight } from "../lib/haptics";
 
 export default function Header({
@@ -39,7 +40,10 @@ export default function Header({
           {title}
         </h1>
       </div>
-      <div>{rightElement || <LanguageSwitcher />}</div>
+      <div className="flex items-center gap-2">
+        <MusicButton compact />
+        {rightElement || <LanguageSwitcher />}
+      </div>
     </header>
   );
 }

@@ -2,20 +2,19 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sprout, Volume2, VolumeX } from "lucide-react";
+import { Sprout } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import LanguageSwitcher from "../LanguageSwitcher";
 import Button from "../Button";
+import MusicButton from "./MusicButton";
 import { hapticLight, hapticSuccess } from "../../lib/haptics";
-import { toggleFieldAudio } from "../../lib/fieldAudio";
 
 export default function CinematicNav({ onScrollTo, progress = 0 }) {
   const router = useRouter();
   const { user, demoLogin } = useAuth();
   const { t } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
-  const [audioActive, setAudioActive] = useState(false);
 
   useEffect(() => {
     setScrolled(progress > 0.02);
@@ -88,37 +87,7 @@ export default function CinematicNav({ onScrollTo, progress = 0 }) {
         {/* Actions & Language Switcher */}
         <div className="flex items-center gap-2.5">
           {/* Interstellar Soundtrack Toggle (Hans Zimmer) */}
-          <button
-            type="button"
-            onClick={() => {
-              hapticLight();
-              toggleFieldAudio((active) => setAudioActive(active));
-            }}
-            aria-label={audioActive ? "Pause Interstellar Soundtrack" : "Play Interstellar Main Theme by Hans Zimmer"}
-            title={audioActive ? "Interstellar Theme Playing (Click to pause)" : "Play Interstellar Theme - Hans Zimmer"}
-            className={`p-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-              audioActive
-                ? "bg-emerald-100/90 border-emerald-400 text-emerald-800 shadow-2xs"
-                : "bg-white/80 border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-            }`}
-          >
-            {audioActive ? (
-              <>
-                <Volume2 className="w-3.5 h-3.5" />
-                <span className="hidden lg:flex items-end gap-0.5 h-3">
-                  <span className="w-0.5 bg-emerald-600 rounded-full animate-pulse h-2"></span>
-                  <span className="w-0.5 bg-emerald-600 rounded-full animate-bounce h-3"></span>
-                  <span className="w-0.5 bg-emerald-600 rounded-full animate-pulse h-1.5"></span>
-                </span>
-                <span className="hidden lg:inline text-[10px] uppercase font-mono tracking-wider">Interstellar</span>
-              </>
-            ) : (
-              <>
-                <VolumeX className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline text-[10px] uppercase font-mono tracking-wider text-slate-400">Music</span>
-              </>
-            )}
-          </button>
+          <MusicButton showLabel />
 
           <LanguageSwitcher />
 

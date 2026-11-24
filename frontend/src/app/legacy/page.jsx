@@ -25,6 +25,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
 import Button from "../../components/Button";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import MusicButton from "../../components/ui/MusicButton";
 import { hapticLight, hapticSuccess } from "../../lib/haptics";
 
 export default function LandingPage() {
@@ -87,7 +88,8 @@ export default function LandingPage() {
             </a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <MusicButton showLabel />
             <LanguageSwitcher />
 
             {user ? (

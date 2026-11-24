@@ -23,6 +23,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import { api } from "../../lib/api";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import Card from "../../components/Card";
+import MusicButton from "../../components/ui/MusicButton";
 import Button from "../../components/Button";
 import Chip from "../../components/Chip";
 import Skeleton from "../../components/Skeleton";
@@ -139,6 +140,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <MusicButton compact />
             <LanguageSwitcher />
             <button
               onClick={logout}

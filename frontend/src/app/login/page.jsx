@@ -10,6 +10,7 @@ import Button from "../../components/Button";
 import Card from "../../components/Card";
 import ErrorBox from "../../components/ErrorBox";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import MusicButton from "../../components/ui/MusicButton";
 import { hapticLight } from "../../lib/haptics";
 
 function LoginForm() {
@@ -261,7 +262,10 @@ export default function LoginPage() {
             <span className="text-base font-extrabold text-slate-900">{t("app_name")}</span>
           </button>
         </div>
-        <LanguageSwitcher />
+        <div className="flex items-center gap-2">
+          <MusicButton compact />
+          <LanguageSwitcher />
+        </div>
       </div>
 
       <Suspense fallback={<div className="p-8 text-center text-xs text-krishi-grey">Loading login form...</div>}>

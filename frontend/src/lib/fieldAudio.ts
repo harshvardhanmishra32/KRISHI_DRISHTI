@@ -12,6 +12,25 @@ let audioElement: HTMLAudioElement | null = null;
 let audioCtx: AudioContext | null = null;
 let isAudioRunning = false;
 let fadeInterval: NodeJS.Timeout | null = null;
+const stateListeners = new Set<(active: boolean) => void>();
+
+function notifyStateListeners(active: boolean) {
+  stateListeners.forEach((cb) => {
+    try {
+      cb(active);
+    } catch {
+      // ignore
+    }
+  });
+}
+
+export function subscribeAudioState(callback: (active: boolean) => void): () => void {
+  stateListeners.add(callback);
+  callback(isAudioRunning);
+  return () => {
+    stateListeners.delete(callback);
+  };
+}
 
 const TRACK_PATH = "/audio/interstellar-main-theme.mp3";
 const STORAGE_KEY = "krishi_audio_preference";
@@ -93,6 +112,7 @@ export function toggleFieldAudio(onStateChange?: (active: boolean) => void): boo
           audioElement.pause();
         }
         isAudioRunning = false;
+        notifyStateListeners(false);
         onStateChange?.(false);
       }
     }, 45);
@@ -123,6 +143,7 @@ export function toggleFieldAudio(onStateChange?: (active: boolean) => void): boo
       playPromise
         .then(() => {
           isAudioRunning = true;
+          notifyStateListeners(true);
           onStateChange?.(true);
 
           const targetVolume = 0.72;
@@ -143,6 +164,7 @@ export function toggleFieldAudio(onStateChange?: (active: boolean) => void): boo
         .catch((err) => {
           console.warn("Audio autoplay blocked by browser policy until interaction:", err);
           isAudioRunning = false;
+          notifyStateListeners(false);
           onStateChange?.(false);
         });
     }
@@ -151,6 +173,7 @@ export function toggleFieldAudio(onStateChange?: (active: boolean) => void): boo
   } catch (err) {
     console.warn("Soundtrack initialization error:", err);
     isAudioRunning = false;
+    notifyStateListeners(false);
     onStateChange?.(false);
     return false;
   }
